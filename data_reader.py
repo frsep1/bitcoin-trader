@@ -44,6 +44,12 @@ class historic_data:
         current_row = self.df[self.df['Timestamp'] <= time].iloc[-1]
         return current_row['Close']
     
+    def get_start(self):
+        return self.start
+    
+    def get_end(self):
+        return self.end
+    
 
 
 
@@ -51,19 +57,57 @@ class historic_data:
 class balance():
     def __init__(self, balance = 1000):
         self.balance = balance
+        self.bitcoin = 0
 
     def get_balance(self):
         return self.balance
 
-    def buy(self, amount, price):
-        if amount * price > self.balance:
-            raise ValueError("Insufficient balance")
-        self.balance -= amount * price * 1.03
-        return self.balance
+    def buy(self, price):
+        bitcoins = (self.balance / price) * 0.97
+        self.bitcoin += bitcoins
+        self.balance = 0
+
+    def sell(self, price):
+        self.balance += (self.bitcoin * price) * 0.97
+        self.bitcoin = 0
     
-    def sell(self, amount, price):
-        self.balance += amount * price * 0.97
-        return self.balance
+
+#scroing function designed to get the final balance with strategy given on handout within a certain time frame
+#weights = [w1, w2, w3, w4, w5, w6]
+#days = [d1, d2, d3, d4, d5, d6] <<<<<-----  is actually in seconds not days
+#alphas = [a1, a2]
+def scoring(weights, days, alphas, start, end):
+    current_time = start + (max(days) * 60)
+    balance = balance()
+    historic_data = historic_data()
+    current_signal = -1
+    while current_time <= end:
+        high = (weights[0] * historic_data.current_WMA(days[0], historic_data.SMA(days[0]), current_time) +
+                weights[1] * historic_data.current_WMA(days[1], historic_data.LMA(days[1]), current_time) +
+                weights[2] * historic_data.current_WMA(days[2], historic_data.EMA(days[2], alphas[0]), current_time)) / sum(weights[:3])
+        low = (weights[3] * historic_data.current_WMA(days[3], historic_data.SMA(days[3]), current_time) +
+                weights[4] * historic_data.current_WMA(days[4], historic_data.LMA(days[4]), current_time) +
+                weights[5] * historic_data.current_WMA(days[5], historic_data.EMA(days[5], alphas[1]), current_time)) / sum(weights[3:])
+        last_signal = current_signal
+        if high < low:
+            current_signal = 1
+            if last_signal == -1:
+                balance.buy(historic_data.current_price(current_time))
+        elif high > low:
+            current_signal = -1
+            if last_signal == 1:
+                balance.sell(historic_data.current_price(current_time))
+        else:
+            current_signal = last_signal
+        current_time += 60
+    if current_signal == 1:
+        balance.sell(historic_data.current_price(current_time))
+    return balance.get_balance()
+            
+        
+            
+                
+        
 
         
     
