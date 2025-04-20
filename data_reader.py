@@ -43,6 +43,28 @@ class historic_data:
     def current_price(self, time):
         current_row = self.df[self.df['Timestamp'] <= time].iloc[-1]
         return current_row['Close']
+    
+
+
+
+
+class balance():
+    def __init__(self, balance = 1000):
+        self.balance = balance
+
+    def get_balance(self):
+        return self.balance
+
+    def buy(self, amount, price):
+        if amount * price > self.balance:
+            raise ValueError("Insufficient balance")
+        self.balance -= amount * price
+        return self.balance
+    
+    def sell(self, amount, price):
+        self.balance += amount * price
+        return self.balance
+
         
     
     
