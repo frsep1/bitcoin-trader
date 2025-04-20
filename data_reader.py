@@ -3,13 +3,22 @@ import numpy as np
 import time
 import datetime
 start = "01/12/2023"
-end = "31/12/2023"
+end = "06/12/2023"
 
 class historic_data:
     def __init__(self, start=start, end=end):
         self.start = time.mktime(datetime.datetime.strptime(start, "%d/%m/%Y").timetuple())
-        self.end = time.mktime(datetime.datetime.strptime(end, "%d/%m/%Y").timetuple())        
-        self.df = pd.read_csv('btcusd_1-min_data.csv')
+        self.end = time.mktime(datetime.datetime.strptime(end, "%d/%m/%Y").timetuple())
+        dtype = {
+            'Timestamp': np.int64,
+            'Open': np.float64,
+            'High': np.float64,
+            'Low': np.float64,
+            'Close': np.float64,
+            'Volume': np.float64,
+            'datetime': 'str'
+        }
+        self.df = pd.read_csv('btcusd_1-min_data.csv', dtype=dtype)
         self.df = self.df[(self.df['Timestamp'] >= self.start) & (self.df['Timestamp'] <= self.end)]
 
     #\/\/\/ private methods \/\/\/
@@ -56,64 +65,58 @@ class historic_data:
 
 class balance():
     def __init__(self, balance = 1000):
-        self.balance = balance
+        self.my_balance = balance
         self.bitcoin = 0
 
-    def get_balance(self):
-        return self.balance
+    def get_my_balance(self):
+        return self.my_balance
 
     def buy(self, price):
-        bitcoins = (self.balance / price) * 0.97
+        bitcoins = (self.my_balance / price) * 0.97
         self.bitcoin += bitcoins
-        self.balance = 0
+        self.my_balance = 0
 
     def sell(self, price):
-        self.balance += (self.bitcoin * price) * 0.97
+        self.my_balance += (self.bitcoin * price) * 0.97
         self.bitcoin = 0
     
 
-#scroing function designed to get the final balance with strategy given on handout within a certain time frame
+#scroing function designed to get the final my_balance with strategy given on handout within a certain time frame
 #weights = [w1, w2, w3, w4, w5, w6]
 #days = [d1, d2, d3, d4, d5, d6] <<<<<-----  is actually in seconds not days
 #alphas = [a1, a2]
 def scoring(weights, days, alphas, start, end):
     current_time = start + (max(days) * 60)
-    balance = balance()
-    historic_data = historic_data()
+    my_balance = balance()
+    data = historic_data()
     current_signal = -1
     while current_time <= end:
-        high = (weights[0] * historic_data.current_WMA(days[0], historic_data.SMA(days[0]), current_time) +
-                weights[1] * historic_data.current_WMA(days[1], historic_data.LMA(days[1]), current_time) +
-                weights[2] * historic_data.current_WMA(days[2], historic_data.EMA(days[2], alphas[0]), current_time)) / sum(weights[:3])
-        low = (weights[3] * historic_data.current_WMA(days[3], historic_data.SMA(days[3]), current_time) +
-                weights[4] * historic_data.current_WMA(days[4], historic_data.LMA(days[4]), current_time) +
-                weights[5] * historic_data.current_WMA(days[5], historic_data.EMA(days[5], alphas[1]), current_time)) / sum(weights[3:])
+        high = (weights[0] * data.current_WMA(days[0], data.SMA(days[0]), current_time) +
+                weights[1] * data.current_WMA(days[1], data.LMA(days[1]), current_time) +
+                weights[2] * data.current_WMA(days[2], data.EMA(days[2], alphas[0]), current_time)) / sum(weights[:3])
+        low = (weights[3] * data.current_WMA(days[3], data.SMA(days[3]), current_time) +
+                weights[4] * data.current_WMA(days[4], data.LMA(days[4]), current_time) +
+                weights[5] * data.current_WMA(days[5], data.EMA(days[5], alphas[1]), current_time)) / sum(weights[3:])
         last_signal = current_signal
         if high < low:
             current_signal = 1
             if last_signal == -1:
-                balance.buy(historic_data.current_price(current_time))
+                print(my_balance.get_my_balance())
+                my_balance.buy(data.current_price(current_time))
         elif high > low:
             current_signal = -1
             if last_signal == 1:
-                balance.sell(historic_data.current_price(current_time))
+                my_balance.sell(data.current_price(current_time))
+                print(my_balance.get_my_balance())
         else:
             current_signal = last_signal
         current_time += 60
     if current_signal == 1:
-        balance.sell(historic_data.current_price(current_time))
-    return balance.get_balance()
+        my_balance.sell(data.current_price(current_time))
+    return my_balance.get_my_balance()
+
+score = scoring([1, 1, 1, 1, 1, 1], [5, 10, 15, 20, 25, 30], [0.5, 0.5], time.mktime(datetime.datetime.strptime(start, "%d/%m/%Y").timetuple()), time.mktime(datetime.datetime.strptime(end, "%d/%m/%Y").timetuple()))
+print("Final balance: ", score)
             
         
             
-                
-        
-
-        
-    
-    
-
-historic_data = historic_data()
-t = time.mktime(datetime.datetime.strptime("10/12/2023", "%d/%m/%Y").timetuple())
-print(historic_data.current_price(t))
-print(historic_data.current_WMA(5, historic_data.LMA(5), t))
