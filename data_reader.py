@@ -58,11 +58,11 @@ class balance():
     def buy(self, amount, price):
         if amount * price > self.balance:
             raise ValueError("Insufficient balance")
-        self.balance -= amount * price
+        self.balance -= amount * price * 1.03
         return self.balance
     
     def sell(self, amount, price):
-        self.balance += amount * price
+        self.balance += amount * price * 0.97
         return self.balance
 
         
