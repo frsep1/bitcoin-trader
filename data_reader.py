@@ -85,10 +85,10 @@ class balance():
 #weights = [w1, w2, w3, w4, w5, w6]
 #days = [d1, d2, d3, d4, d5, d6] <<<<<-----  is actually in seconds not days
 #alphas = [a1, a2]
-def scoring(weights, days, alphas, start, end):
+def scoring(weights, days, alphas, start, end, my_data=historic_data()):
     current_time = start + (max(days) * 60)
     my_balance = balance()
-    data = historic_data()
+    data = my_data
     current_signal = -1
     while current_time <= end:
         high = (weights[0] * data.current_WMA(days[0], data.SMA(days[0]), current_time) +
