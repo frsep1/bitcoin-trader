@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import time
 import datetime
-start = "01/12/2023"
-end = "06/12/2023"
+start = "01/01/2023"
+end = "30/12/2023"
 
 class historic_data:
     def __init__(self, start=start, end=end):
@@ -93,6 +93,11 @@ def scoring(weights, days, alphas, start, end, my_data=historic_data(), interval
         days[i] = abs(int(round(days[i])))
         if days[i] < 1:
             days[i] = 1 ## possibly change this to raising an error instead of changing to 1
+    for i in range(len(alphas)):
+        if alphas[i] < 0:
+            alphas[i] = 0
+        if alphas[i] > 1:
+            alphas[i] = 1
     current_time = start + (max(days) * 60)
     my_balance = balance()
     data = my_data

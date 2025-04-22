@@ -3,22 +3,25 @@ import numpy as np
 import datetime
 
 
-start = data_reader.time.mktime(datetime.datetime.strptime(data_reader.start, "%d/%m/%Y").timetuple())
-end = data_reader.time.mktime(datetime.datetime.strptime(data_reader.end, "%d/%m/%Y").timetuple())
+start = data_reader.time.mktime(datetime.datetime.strptime("01/01/2023", "%d/%m/%Y").timetuple())
+end = data_reader.time.mktime(datetime.datetime.strptime("30/7/2023", "%d/%m/%Y").timetuple())
 data = data_reader.historic_data(start=data_reader.start, end=data_reader.end)
 
+
 class whale():
-    def __init__(self, scoring, dimentions, minx, maxx, start, end, data):
+    def __init__(self, scoring, minx, maxx, start, end, data):
         self.scoring = scoring
-        self.pos = np.random.uniform(minx, maxx, size=dimentions)
-        self.score = scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, my_data=data)
+        w_and_d = np.random.uniform(minx, maxx, size=12)
+        a = np.random.uniform(0, 1, size=2)
+        self.pos = np.concatenate((w_and_d, a))        
+        self.score = scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, my_data=data, intervals=60 * 100)
     def change_pos(self, new_pos):
         self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, my_data=data)
+        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, my_data=data, intervals=60 * 100)
         
-def WOA(scoring, dimentions, minx, maxx, num_whales, iterations, spiral_constant=1, start=start, end=end, data=data):
-    whales = [whale(scoring, dimentions, minx, maxx, start, end, data) for i in range(num_whales)]
-    best_pos = np.zeros(dimentions)
+def WOA(scoring, minx, maxx, num_whales, iterations, spiral_constant=1, start=start, end=end, data=data):
+    whales = [whale(scoring, minx, maxx, start, end, data) for i in range(num_whales)]
+    best_pos = np.zeros(14)
     best_score = 0
     for i in range(num_whales):
         if whales[i].score > best_score:
@@ -55,9 +58,14 @@ def WOA(scoring, dimentions, minx, maxx, num_whales, iterations, spiral_constant
                 best_pos = whales[j].pos
     return best_pos, best_score
 
-best_pos, best_score = WOA(data_reader.scoring, 14, 1, 100, 10, 10, start=start, end=end, data=data)
+best_pos, best_score = WOA(data_reader.scoring, 0, 100, 10, 10, start=start, end=end, data=data)
 print("Best position: ", best_pos)
 print("Best score: ", best_score)
+start = data_reader.time.mktime(datetime.datetime.strptime("01/8/2023", "%d/%m/%Y").timetuple())
+end = data_reader.time.mktime(datetime.datetime.strptime("30/12/2023", "%d/%m/%Y").timetuple())
+test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
+print("Test score: ", test)
+
 
 
         
