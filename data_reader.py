@@ -87,7 +87,7 @@ class balance():
 #weights = [w1, w2, w3, w4, w5, w6]
 #days = [d1, d2, d3, d4, d5, d6] <<<<<-----  is actually in seconds not days
 #alphas = [a1, a2]
-def scoring(weights, days, alphas, start, end, my_data=historic_data()):
+def scoring(weights, days, alphas, start, end, my_data=historic_data(), intervals=60):
     current_time = start + (max(days) * 60)
     my_balance = balance()
     data = my_data
@@ -117,9 +117,9 @@ def scoring(weights, days, alphas, start, end, my_data=historic_data()):
                 print(my_balance.get_my_balance())
         else:
             current_signal = last_signal
-        current_time += 60
+        current_time += intervals
     if current_signal == 1:
-        my_balance.sell(data.current_price(current_time - 60)) #if balance is in bitcoin at the end of the time frame, sell it at the last available price
+        my_balance.sell(data.current_price(current_time - intervals)) #if balance is in bitcoin at the end of the time frame, sell it at the last available price
     return my_balance.get_my_balance()
 
 score = scoring([1, 1, 1, 1, 1, 1], [5, 10, 15, 20, 25, 30], [0.5, 0.5], time.mktime(datetime.datetime.strptime(start, "%d/%m/%Y").timetuple()), time.mktime(datetime.datetime.strptime(end, "%d/%m/%Y").timetuple()))
