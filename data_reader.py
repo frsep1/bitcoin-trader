@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import time
 import datetime
-start = "01/12/2023"
+start = "01/01/2023"
 end = "06/12/2023"
 
 class historic_data:
@@ -19,7 +19,9 @@ class historic_data:
             'datetime': 'str'
         }
         self.df = pd.read_csv('btcusd_1-min_data.csv', dtype=dtype)
+        self.df = self.df.drop(columns=['Volume', 'datetime']) ## not sure what volume is but maybe we need it?
         self.df = self.df[(self.df['Timestamp'] >= self.start) & (self.df['Timestamp'] <= self.end)]
+        self.df = self.df.set_index('Timestamp') # setting the timestamp as the index to speed up finding the current price from O(n) to O(1)
 
     #\/\/\/ private methods \/\/\/
 
@@ -42,7 +44,7 @@ class historic_data:
     #\/\/\/ public methods \/\/\/
     # inut: n = number of periods in minutes , kernel = specific wma filter ie SMA, LMA, EMA , time = timestamp in unix time
     def current_WMA(self, n, kernel, time):
-        current_df = self.df[self.df['Timestamp'] <= time]
+        current_df = self.df.loc[time - n * 60:time]
         p = current_df['Close'].values
         if len(p) < n:
             raise ValueError("Not enough data points to calculate WMA.")
@@ -50,8 +52,8 @@ class historic_data:
             return self.WMA(p, n, kernel)[-1]
     
     def current_price(self, time):
-        current_row = self.df[self.df['Timestamp'] <= time].iloc[-1]
-        return current_row['Close']
+        current_row = self.df.loc[time].iloc[-1]
+        return current_row
     
     def get_start(self):
         return self.start
@@ -91,6 +93,11 @@ def scoring(weights, days, alphas, start, end, my_data=historic_data()):
     data = my_data
     current_signal = -1
     while current_time <= end:
+        """
+        if my_balance.get_my_balance() <= 1:
+            print("ran out of money")
+            return my_balance.get_my_balance()
+        """
         high = (weights[0] * data.current_WMA(days[0], data.SMA(days[0]), current_time) +
                 weights[1] * data.current_WMA(days[1], data.LMA(days[1]), current_time) +
                 weights[2] * data.current_WMA(days[2], data.EMA(days[2], alphas[0]), current_time)) / sum(weights[:3])
@@ -112,7 +119,7 @@ def scoring(weights, days, alphas, start, end, my_data=historic_data()):
             current_signal = last_signal
         current_time += 60
     if current_signal == 1:
-        my_balance.sell(data.current_price(current_time))
+        my_balance.sell(data.current_price(current_time - 60)) #if balance is in bitcoin at the end of the time frame, sell it at the last available price
     return my_balance.get_my_balance()
 
 score = scoring([1, 1, 1, 1, 1, 1], [5, 10, 15, 20, 25, 30], [0.5, 0.5], time.mktime(datetime.datetime.strptime(start, "%d/%m/%Y").timetuple()), time.mktime(datetime.datetime.strptime(end, "%d/%m/%Y").timetuple()))
