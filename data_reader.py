@@ -3,7 +3,7 @@ import numpy as np
 import time
 import datetime
 start = "01/01/2023"
-end = "30/12/2023"
+end = "30/12/2024"
 
 class historic_data:
     def __init__(self, start=start, end=end):
@@ -130,6 +130,15 @@ def scoring(weights, days, alphas, start, end, my_data=historic_data(), interval
         current_time += intervals
     if current_signal == 1:
         my_balance.sell(data.current_price(current_time - intervals)) #if balance is in bitcoin at the end of the time frame, sell it at the last available price
+    return my_balance.get_my_balance()
+
+def test(my_data=historic_data(), start=start, end=end):
+    data = my_data
+    start_price = data.current_price(start)
+    end_price = data.current_price(end)
+    my_balance = balance()
+    my_balance.buy(start_price)
+    my_balance.sell(end_price)
     return my_balance.get_my_balance()
 
 """

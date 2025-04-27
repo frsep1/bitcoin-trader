@@ -65,6 +65,23 @@ start = data_reader.time.mktime(datetime.datetime.strptime("01/8/2023", "%d/%m/%
 end = data_reader.time.mktime(datetime.datetime.strptime("30/12/2023", "%d/%m/%Y").timetuple())
 test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
 print("Test score: ", test)
+test = data_reader.test(my_data=data, start=start, end=end)
+print("Test score: ", test, "\n")
+
+
+start = data_reader.time.mktime(datetime.datetime.strptime("01/01/2024", "%d/%m/%Y").timetuple())
+end = data_reader.time.mktime(datetime.datetime.strptime("30/07/2024", "%d/%m/%Y").timetuple())
+test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
+print("Test score: ", test)
+test = data_reader.test(my_data=data, start=start, end=end)
+print("Test score: ", test, "\n")
+
+start = data_reader.time.mktime(datetime.datetime.strptime("01/8/2024", "%d/%m/%Y").timetuple())
+end = data_reader.time.mktime(datetime.datetime.strptime("30/12/2024", "%d/%m/%Y").timetuple())
+test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
+print("Test score: ", test)
+test = data_reader.test(my_data=data, start=start, end=end)
+print("Test score: ", test, "\n")
 
 
 
