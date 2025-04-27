@@ -1,26 +1,27 @@
-import data_reader
 import numpy as np
-import datetime
-
-
-start = data_reader.time.mktime(datetime.datetime.strptime("01/01/2023", "%d/%m/%Y").timetuple())
-end = data_reader.time.mktime(datetime.datetime.strptime("30/7/2023", "%d/%m/%Y").timetuple())
-data = data_reader.historic_data(start=data_reader.start, end=data_reader.end)
+import pandas as pd
+import data_reader as dr
 
 
 class whale():
-    def __init__(self, scoring, minx, maxx, start, end, data):
+    def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
         self.scoring = scoring
-        w_and_d = np.random.uniform(minx, maxx, size=12)
-        a = np.random.uniform(0, 1, size=2)
-        self.pos = np.concatenate((w_and_d, a))        
-        self.score = scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, my_data=data, intervals=60 * 100)
+        self.start = start
+        self.end = end
+        self.data = data
+        self.intervals = intervals
+        w = np.random.uniform(weights[0], weights[1], size=weights[2])
+        d = np.random.uniform(days[0], days[1], size=days[2])
+        a = np.random.uniform(alphas[0], alphas[1], size=alphas[2])
+        self.pos = np.concatenate((w, d, a))       
+        self.score = scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, data)
     def change_pos(self, new_pos):
         self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, my_data=data, intervals=60 * 100)
+        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
         
-def WOA(scoring, minx, maxx, num_whales, iterations, spiral_constant=1, start=start, end=end, data=data):
-    whales = [whale(scoring, minx, maxx, start, end, data) for i in range(num_whales)]
+#model(self.score, days, weights, alphas, num_whales, max_iter, step_size, constant, self.train_start, self.train_end, self.train_data)
+def WOA(scoring, days, weights, alphas, num_whales, iterations, intervals, start, end, data, spiral_constant=1):
+    whales = [whale(scoring, days, weights, alphas, intervals, start, end, data) for i in range(num_whales)]
     best_pos = np.zeros(14)
     best_score = 0
     for i in range(num_whales):
@@ -56,32 +57,16 @@ def WOA(scoring, minx, maxx, num_whales, iterations, spiral_constant=1, start=st
             if whales[j].score > best_score:
                 best_score = whales[j].score
                 best_pos = whales[j].pos
-    return best_pos, best_score
-
-best_pos, best_score = WOA(data_reader.scoring, 0, 100, 10, 10, start=start, end=end, data=data)
-print("Best position: ", best_pos)
-print("Best score: ", best_score)
-start = data_reader.time.mktime(datetime.datetime.strptime("01/8/2023", "%d/%m/%Y").timetuple())
-end = data_reader.time.mktime(datetime.datetime.strptime("30/12/2023", "%d/%m/%Y").timetuple())
-test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
-print("Test score: ", test)
-test = data_reader.test(my_data=data, start=start, end=end)
-print("Test score: ", test, "\n")
+    return best_pos
 
 
-start = data_reader.time.mktime(datetime.datetime.strptime("01/01/2024", "%d/%m/%Y").timetuple())
-end = data_reader.time.mktime(datetime.datetime.strptime("30/07/2024", "%d/%m/%Y").timetuple())
-test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
-print("Test score: ", test)
-test = data_reader.test(my_data=data, start=start, end=end)
-print("Test score: ", test, "\n")
+models = dr.train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100)
+models.train_model(WOA, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=120, num_whales=10, constant=1)
+models.compare_models()
 
-start = data_reader.time.mktime(datetime.datetime.strptime("01/8/2024", "%d/%m/%Y").timetuple())
-end = data_reader.time.mktime(datetime.datetime.strptime("30/12/2024", "%d/%m/%Y").timetuple())
-test = data_reader.scoring(best_pos[0:6], best_pos[6:12], best_pos[12:14], start, end, my_data=data, intervals=60 * 100)
-print("Test score: ", test)
-test = data_reader.test(my_data=data, start=start, end=end)
-print("Test score: ", test, "\n")
+#10 whales, 10 iterations = 6.369556456832015
+#20 whales, 10 iterations = -83.41078505604878
+#10 whales, 20 iterations = 6.369556456832015
 
 
 
