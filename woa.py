@@ -20,7 +20,7 @@ class whale():
         self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
         
 #model(self.score, days, weights, alphas, num_whales, max_iter, step_size, constant, self.train_start, self.train_end, self.train_data)
-def WOA(scoring, days, weights, alphas, num_whales, iterations, intervals, start, end, data, spiral_constant=1):
+def WOA(scoring, days, weights, alphas, num_whales, iterations, intervals, start, end, data, constant=1):
     whales = [whale(scoring, days, weights, alphas, intervals, start, end, data) for i in range(num_whales)]
     best_pos = np.zeros(14)
     best_score = 0
@@ -30,13 +30,12 @@ def WOA(scoring, days, weights, alphas, num_whales, iterations, intervals, start
             best_pos = whales[i].pos
     for i in range(iterations):
         a = 2 * (1 - i / iterations)
-        a2 = -1 + i * (-1 / iterations)
         for j in range(num_whales):
             r = np.random.rand()
             A = 2 * a * r - a
             C = 2 * r
             l = (2 * np.random.rand()) - 1
-            b = spiral_constant
+            b = constant
             p = np.random.rand()
             if p < 0.5:
                 if abs(A) < 1:
@@ -64,7 +63,7 @@ def WOA(scoring, days, weights, alphas, num_whales, iterations, intervals, start
 models = dr.train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100) #(train_start, train_end, test_start, test_end, step_size)
 # the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
 # step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
-models.train_model(WOA, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=120, num_pop=10, constant=1) #(model, days, weights, alphas, max_iter, num_pop, constant)
+models.train_model(WOA, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10, constant=1) #(model, days, weights, alphas, max_iter, num_pop, constant)
 models.compare_models()
 
 #10 whales, 10 iterations = $6.369556456832015 profit over baseline

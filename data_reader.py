@@ -145,7 +145,7 @@ class train():
     #adds the returned value of models to the models dict
     #the value returned should be in the form [weight1, ..., weightsn, day1, ..., dayn, alpha1, ..., alphan]
     def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1,):
-        self.models[model] = model(self.score, days, weights, alphas, num_pop, max_iter, self.step_size, self.train_start, self.train_end, self.train_data, spiral_constant=constant)
+        self.models[model] = model(self.score, days, weights, alphas, num_pop, max_iter, self.step_size, self.train_start, self.train_end, self.train_data, constant=constant)
 
     def test_model(self, model):
         result = self.score(self.models[model][0:6], self.models[model][6:12], self.models[model][12:14], self.test_start, self.test_end, my_data=self.test_data)
