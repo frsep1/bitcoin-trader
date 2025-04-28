@@ -134,6 +134,7 @@ class train():
         if current_signal == 1:
             my_balance.sell(data.current_price(current_time - self.step_size))
         return my_balance.get_my_balance()
+    #returns score if we were to just buy at the start and sell at the end
     def baseline_score(self):
         start_price = self.test_data.current_price(self.test_start)
         end_price = self.test_data.current_price(self.test_end)
@@ -141,14 +142,16 @@ class train():
         my_balance.buy(start_price)
         my_balance.sell(end_price)
         return my_balance.get_my_balance()
-    
-    def train_model(self, model, days, weights, alphas, max_iter=1000, num_whales=10, constant=1,):
-        self.models[model] = model(self.score, days, weights, alphas, num_whales, max_iter, self.step_size, self.train_start, self.train_end, self.train_data, spiral_constant=constant)
+    #adds the returned value of models to the models dict
+    #the value returned should be in the form [weight1, ..., weightsn, day1, ..., dayn, alpha1, ..., alphan]
+    def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1,):
+        self.models[model] = model(self.score, days, weights, alphas, num_pop, max_iter, self.step_size, self.train_start, self.train_end, self.train_data, spiral_constant=constant)
 
     def test_model(self, model):
         result = self.score(self.models[model][0:6], self.models[model][6:12], self.models[model][12:14], self.test_start, self.test_end, my_data=self.test_data)
         return result
-    
+    #compares all the models in the models dict
+    #prints the score of each model and the best model
     def compare_models(self):
         baseline = self.baseline_score()
         print(f"Baseline score: {baseline}/n")
