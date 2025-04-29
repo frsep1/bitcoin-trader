@@ -44,18 +44,19 @@ class HistoricData:
 
     def pad(self, p, n):
         padding = -np.flip(p[1:n])
+        print([len(p),len(padding)])
         return np.append(padding, p)
 
     def WMA(self, p, n, kernel):
-        return np.convolve(self.pad(p, n), kernel, mode='valid')
+        return np.convolve(p, kernel, mode='valid')
 
     def current_WMA(self, n, kernel, timestamp):
         current_df = self.df.loc[timestamp - n * 86400:timestamp]
-
-
         p = current_df['close'].values
         if len(p) < n:
-            raise ValueError("Not enough data points to calculate WMA.")
+            #print([timestamp,timestamp + (n-len(p)) * 86400])
+            current_df = self.df.loc[timestamp:timestamp + (n-len(p)) * 86400]
+            self.pad(p, n)
         return self.WMA(p, n, kernel)[-1]
 
     def current_price(self, timestamp):
@@ -85,8 +86,8 @@ class Train:
         self.train_end = self.to_unix(train_end)
         self.test_start = self.to_unix(test_start)
         self.test_end = self.to_unix(test_end)
-        self.train_data = HistoricData(self.train_start, self.train_end, buffer_days=30)
-        self.test_data = HistoricData(self.test_start, self.test_end, buffer_days=30)
+        self.train_data = HistoricData(self.train_start, self.train_end, buffer_days=0)
+        self.test_data = HistoricData(self.test_start, self.test_end, buffer_days=0)
         self.models = {}
         self.step_size = step_size
 
@@ -129,14 +130,13 @@ class Train:
                 if current_signal == 1:
                     balance.sell(data.current_price(current_time))
                     current_signal = -1
-
             current_time += self.step_size
             day_counter += 1
 
         if current_signal == 1:
             balance.sell(data.current_price(current_time - self.step_size))
 
-        print(f"[DEBUG - score] Number of training days simulated: {day_counter}")
+        #print(f"[DEBUG - score] Number of training days simulated: {day_counter}")
         return balance.get_balance()
 
     def baseline_score(self):

@@ -95,10 +95,12 @@ def manta_ray_algo(scoring, days, weights, alphas, num_pop, max_iterations, inte
 
     return best_solution
 
-
+TRAIN_START = "28/11/2014"
+TRAIN_END = "31/12/2019"
+TEST_START = "01/01/2020"
+TEST_END = "01/03/2022"
 # training model copied from, not tested yet
-models = dr.Train("01/10/2021", "15/11/2021", "01/01/2022", "15/02/2022",
-                  step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
+models = dr.Train(TRAIN_START, TRAIN_END, TEST_START, TEST_END, step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
 # the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
 # step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
 models.train_model(manta_ray_algo, [1, 30, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10,
