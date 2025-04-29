@@ -2,7 +2,7 @@ import numpy as np
 import data_reader as dr
 from random import randint
 
-# code below based heavily on the provided psuedo code provided in
+# code below based heavily on the provided pseudo code provided in
 # "Manta ray foraging optimization:An effective bio-inspired optimizer for engineering applications"
 # Article by Zhao, Zhang & Wang
 
@@ -97,10 +97,10 @@ def manta_ray_algo(scoring, days, weights, alphas, num_pop, max_iterations, inte
 
 
 # training model copied from, not tested yet
-models = dr.train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023",
-                  step_size=60 * 100)  # (train_start, train_end, test_start, test_end, step_size)
+models = dr.Train("01/10/2021", "15/11/2021", "01/01/2022", "15/02/2022",
+                  step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
 # the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
 # step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
-models.train_model(manta_ray_algo, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10,
+models.train_model(manta_ray_algo, [1, 30, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10,
                    constant=1)  # (model, days, weights, alphas, max_iter, num_pop, constant)
 models.compare_models()
