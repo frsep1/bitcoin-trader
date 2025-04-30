@@ -42,21 +42,26 @@ class HistoricData:
     def LMA(self, n):
         return np.array((2 / (n + 1)) * (1 - np.arange(n) / n))
 
+    # This modifies all points
     def pad(self, p, n):
         padding = -np.flip(p[1:n])
-        print([len(p),len(padding)])
+        #print([n,len(p),len(padding)])
         return np.append(padding, p)
 
     def WMA(self, p, n, kernel):
         return np.convolve(p, kernel, mode='valid')
 
+    # Calculates the WMA and checks to see if padding is required
     def current_WMA(self, n, kernel, timestamp):
-        current_df = self.df.loc[timestamp - n * 86400:timestamp]
-        p = current_df['close'].values
+        # Gets data points from time t - n_days to time t
+        p = self.df.loc[timestamp - n * 86400:timestamp]['close'].values
+        # Check if we have enough data points; pad if necessary
         if len(p) < n:
-            #print([timestamp,timestamp + (n-len(p)) * 86400])
-            current_df = self.df.loc[timestamp:timestamp + (n-len(p)) * 86400]
-            self.pad(p, n)
+            # Gets t to t + n_days datapoints
+            p = self.df.loc[timestamp:timestamp + n * 86400]['close'].values
+            # Creates new padded data points
+            p = self.pad(p, n)
+
         return self.WMA(p, n, kernel)[-1]
 
     def current_price(self, timestamp):
@@ -99,11 +104,11 @@ class Train:
 
     def score(self, weights, days, alphas, start, end, data):
         days = [min(30, max(1, abs(int(round(d))))) for d in days]
-        alphas = [min(1, max(0, a)) for a in alphas]
+        #alphas = [min(1, max(0, a)) for a in alphas]
         max_days_needed = max(days)
         if end - start < max_days_needed * 86400:
             raise ValueError("Training/test window is too short for chosen WMA window sizes.")
-        current_time = start + 30 * 86400
+        current_time = start # + 30 * 86400
         balance = Balance()
         current_signal = -1
         day_counter = 0
@@ -173,6 +178,7 @@ class Train:
             print(f"Weights: {self.models[model][:6]}")
             print(f"Days: {self.models[model][6:12]}")
             print(f"Alphas: {self.models[model][12:14]}\n")
+            print([results[model], self.models[model][12:14]])
         best_model = max(results, key=results.get)
         print(f"Best model: {best_model}, Score: {results[best_model]}")
         print(f"Profit over baseline: {results[best_model] - baseline}")

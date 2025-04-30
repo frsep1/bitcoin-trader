@@ -103,6 +103,6 @@ TEST_END = "01/03/2022"
 models = dr.Train(TRAIN_START, TRAIN_END, TEST_START, TEST_END, step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
 # the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
 # step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
-models.train_model(manta_ray_algo, [1, 30, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10,
-                   constant=1)  # (model, days, weights, alphas, max_iter, num_pop, constant)
+models.train_model(manta_ray_algo, [1, 100, 6], [0.01, 5, 6], [0.01, 1, 2], max_iter=100, num_pop=10, constant=1)  # (model, days, weights, alphas, max_iter, num_pop, constant)
 models.compare_models()
+
