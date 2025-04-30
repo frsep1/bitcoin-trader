@@ -121,9 +121,9 @@ class Plotter:
                     optimiser['Balance'].sell(self.prices[i])
                     current_signal = -1
             
-            baseline['Balance_line'].append((self.prices[i]/self.prices[0])*1000*0.97)
+            baseline['Balance_line'].append((self.prices[i]/self.prices[0])*1000*0.97*0.97)
             if optimiser['Balance'].get_balance() == 0:
-                optimiser['Balance_line'].append(optimiser['Balance'].btc * self.prices[i])
+                optimiser['Balance_line'].append((optimiser['Balance'].btc * self.prices[i])*0.97)
             else:
                 optimiser['Balance_line'].append(optimiser['Balance'].get_balance())
 
@@ -176,7 +176,7 @@ params = {
 #print(train.test_data.df.index)
 test_plot = Plotter(train.test_data, train.test_start, train.test_end, params, equation)
 test_plot.get_plotting_data()
-test_plot.plot_buy_sell()
+test_plot.plot_profit()
 
 # ------------------ MRFO ----------------------------
 # max_iter=100, num_pop=10, constant=1
@@ -194,5 +194,5 @@ test_plot.plot_buy_sell()
 # Profit over baseline: -344.68513968439674
 
 # ------------------- Plot Results ----------------------
-# Baseline profit = 5835.32
-# Bot profit = 5479.98
+# Baseline profit = 5660.26
+# Bot profit = 5315.58
