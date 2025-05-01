@@ -81,9 +81,9 @@ def HHO(scoring, days, weights, alphas, num_hawks, iterations, intervals, start,
 
 # === RUN SECTION ===
 
-models = dr.train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100)
-models.train_model(HHO, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=20, constant=1)
-models.compare_models()
+#models = dr.Train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100)
+#models.train_model(HHO, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=20, constant=1)
+#models.compare_models()
 
 #10 whales, 10 iterations = -$3.768671154374033 profit over baseline
 #20 whales, 10 iterations = -$83.41078505604878 profit over baseline

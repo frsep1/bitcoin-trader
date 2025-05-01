@@ -104,7 +104,7 @@ class Train:
 
     def score(self, weights, days, alphas, start, end, data):
         days = [min(30, max(1, abs(int(round(d))))) for d in days]
-        #alphas = [min(1, max(0, a)) for a in alphas]
+        alphas = [min(1, max(0, a)) for a in alphas]
         max_days_needed = max(days)
         if end - start < max_days_needed * 86400:
             raise ValueError("Training/test window is too short for chosen WMA window sizes.")
@@ -112,6 +112,7 @@ class Train:
         balance = Balance()
         current_signal = -1
         day_counter = 0
+        num_trans = 0
 
 
         while current_time <= end:
@@ -130,17 +131,20 @@ class Train:
             if high < low:
                 if current_signal == -1:
                     balance.buy(data.current_price(current_time))
+                    num_trans += 1
                     current_signal = 1
             elif high > low:
                 if current_signal == 1:
                     balance.sell(data.current_price(current_time))
+                    num_trans += 1
                     current_signal = -1
             current_time += self.step_size
             day_counter += 1
 
         if current_signal == 1:
             balance.sell(data.current_price(current_time - self.step_size))
-
+        if num_trans < 10:
+            balance.fiat -= 6000
         #print(f"[DEBUG - score] Number of training days simulated: {day_counter}")
         return balance.get_balance()
 
@@ -153,11 +157,13 @@ class Train:
         return bal.get_balance()
 
     def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1):
-        self.models[model] = model(
+        best, error = model(
             self.score, days, weights, alphas, num_pop, max_iter,
             self.step_size, self.train_start, self.train_end,
             self.train_data, constant=constant
         )
+        self.models[model] = best
+        return error
 
     def test_model(self, model):
         result = self.score(
@@ -173,6 +179,7 @@ class Train:
         print(f"Baseline score: {baseline}\n")
         results = {}
         for model in self.models:
+            print(model.__dict__)
             results[model] = self.test_model(model)
             print(f"Model: {model}, Score: {results[model]}")
             print(f"Weights: {self.models[model][:6]}")

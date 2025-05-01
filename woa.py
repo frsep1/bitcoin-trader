@@ -60,11 +60,11 @@ def WOA(scoring, days, weights, alphas, num_whales, iterations, intervals, start
 
 
 
-models = dr.train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100) #(train_start, train_end, test_start, test_end, step_size)
+#models = dr.train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100) #(train_start, train_end, test_start, test_end, step_size)
 # the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
 # step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
-models.train_model(WOA, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10, constant=1) #(model, days, weights, alphas, max_iter, num_pop, constant)
-models.compare_models()
+#models.train_model(WOA, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=10, constant=1) #(model, days, weights, alphas, max_iter, num_pop, constant)
+#models.compare_models()
 
 #10 whales, 10 iterations = $6.369556456832015 profit over baseline
 #20 whales, 10 iterations = -$83.41078505604878 profit over baseline

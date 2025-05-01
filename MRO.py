@@ -28,8 +28,9 @@ class MRFO():
 #max_iterations = 100
 
 def manta_ray_algo(scoring, days, weights, alphas, num_pop, max_iterations, intervals, start, end, data, constant=1):
-
     #S is the somersault factor that decides the somersault range of manta rays and 𝑆 = 2, 𝑟2 and 𝑟3 are two random numbers in [0, 1]
+    error_rate = []
+    
     somersault = 2
 
     lower_bound = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 1, 1, 1, 1, 1, 1, 0.1, 0.1])
@@ -46,7 +47,6 @@ def manta_ray_algo(scoring, days, weights, alphas, num_pop, max_iterations, inte
             best_solution = p.pos.copy()
 
     for iteration in range(max_iterations):
-
         current_best = best_solution.copy()
         for i in range(num_pop):
             rand = np.random.rand()
@@ -90,19 +90,17 @@ def manta_ray_algo(scoring, days, weights, alphas, num_pop, max_iterations, inte
 
         for p in points:
             if p.score > best_fitness:
+                #print("Found new leader")
                 best_fitness = p.score
                 best_solution = p.pos.copy()
+        error_rate.append(best_fitness)
+    return best_solution, error_rate
 
-    return best_solution
-
-TRAIN_START = "28/11/2014"
-TRAIN_END = "31/12/2019"
-TEST_START = "01/01/2020"
-TEST_END = "01/03/2022"
 # training model copied from, not tested yet
-models = dr.Train(TRAIN_START, TRAIN_END, TEST_START, TEST_END, step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
+#models = dr.Train(TRAIN_START, TRAIN_END, TEST_START, TEST_END, step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
 # the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
 # step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
-models.train_model(manta_ray_algo, [1, 100, 6], [0.01, 5, 6], [0.01, 1, 2], max_iter=100, num_pop=10, constant=1)  # (model, days, weights, alphas, max_iter, num_pop, constant)
-models.compare_models()
+# (model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1)
+#models.train_model(manta_ray_algo, [1, 100, 6], [0.001, 10, 6], [0.01, 5, 2], max_iter=50, num_pop=10, constant=1)  # (model, days, weights, alphas, max_iter, num_pop, constant)
+#models.compare_models()
 
