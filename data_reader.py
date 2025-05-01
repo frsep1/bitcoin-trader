@@ -5,7 +5,7 @@ import datetime
 
 
 class HistoricData:
-    def __init__(self, start, end, buffer_days=30):
+    def __init__(self, start, end, buffer_days=0):
         dtype = {
             'unix': np.int64,
             'open': np.float64,
@@ -112,8 +112,6 @@ class Train:
         balance = Balance()
         current_signal = -1
         day_counter = 0
-        num_trans = 0
-
 
         while current_time <= end:
             high = sum([
@@ -131,20 +129,17 @@ class Train:
             if high < low:
                 if current_signal == -1:
                     balance.buy(data.current_price(current_time))
-                    num_trans += 1
                     current_signal = 1
             elif high > low:
                 if current_signal == 1:
                     balance.sell(data.current_price(current_time))
-                    num_trans += 1
                     current_signal = -1
             current_time += self.step_size
             day_counter += 1
 
         if current_signal == 1:
             balance.sell(data.current_price(current_time - self.step_size))
-        if num_trans < 10:
-            balance.fiat -= 6000
+
         #print(f"[DEBUG - score] Number of training days simulated: {day_counter}")
         return balance.get_balance()
 

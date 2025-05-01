@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 #from woa import WOA
 #from sinecosine import sinecosine
 
-TRAIN_START = "28/11/2016"
+TRAIN_START = "28/11/2017"
 TRAIN_END = "31/12/2019"
 TEST_START = "01/01/2020"
-TEST_END = "01/03/2022"
+TEST_END = "01/03/2021"
 DAY_BOUNDS = [1, 100, 6]
 WEIGHT_BOUNDS = [0.001, 10, 6]
 ALPHA_BOUNDS = [0.01, 1, 2]
