@@ -27,7 +27,6 @@ class MRFO():
 
 #max_iterations = 100
 
-
 def manta_ray_algo(scoring, weights, days, alphas, num_pop, max_iterations, intervals, start, end, data, constant=1):
 
     #S is the somersault factor that decides the somersault range of manta rays and 𝑆 = 2, 𝑟2 and 𝑟3 are two random numbers in [0, 1]    
