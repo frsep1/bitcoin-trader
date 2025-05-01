@@ -174,7 +174,6 @@ class Train:
         print(f"Baseline score: {baseline}\n")
         results = {}
         for model in self.models:
-            print(model.__dict__)
             results[model] = self.test_model(model)
             print(f"Model: {model}, Score: {results[model]}")
             print(f"Weights: {self.models[model][:6]}")

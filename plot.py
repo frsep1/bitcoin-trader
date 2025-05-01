@@ -75,21 +75,7 @@ class Plotter:
         plt.show()
 
     def plot_buy_sell(self, model):
-        buy_signals = []
-        sell_signals = []
         model_data = self.plot_data[model]
-        signal_state = -1  # cash signal
-
-        for i in range(1, len(model_data['lows'])):
-            if model_data['highs'][i] > model_data['lows'][i] and model_data['highs'][i - 1] <= model_data['lows'][i - 1]:
-                if signal_state == -1:  # buy signal
-                    buy_signals.append((self.times[i], self.prices[i]))
-                    signal_state = 1
-            elif model_data['highs'][i] < model_data['lows'][i] and model_data['highs'][i - 1] >= model_data['lows'][i - 1]:
-                if signal_state == 1:  # sell signal
-                    sell_signals.append((self.times[i], self.prices[i]))
-                    signal_state = -1
-
         fig, ax1 = plt.subplots(figsize=(14, 6))
 
         # Main signals
@@ -102,10 +88,10 @@ class Plotter:
         ax1.set_title("Buy/Sell Signal Plot")
 
         # Markers for buy/sell
-        for t, p in buy_signals:
-            ax1.scatter(t, p, marker='^', color='green', label='buy' if t == buy_signals[0][0] else "")
-        for t, p in sell_signals:
-            ax1.scatter(t, p, marker='v', color='red', label='sell' if t == sell_signals[0][0] else "")
+        for i, t, p in enumerate(zip(self.times, self.prices)):
+            ax1.scatter(t, p, marker='^', color='green', label='buy' if t == self.plot_data[model]['buy_signals'][i] else "")
+        for i, t, p in enumerate(zip(self.times, self.prices)):
+            ax1.scatter(t, p, marker='v', color='red', label='sell' if t == self.plot_data[model]['sell_signals'][i] else "")
 
         # Secondary y-axis for difference signal
         ax2 = ax1.twinx()
