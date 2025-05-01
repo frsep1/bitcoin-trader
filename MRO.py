@@ -29,7 +29,7 @@ class MRFO():
 
 def manta_ray_algo(scoring, weights, days, alphas, num_pop, max_iterations, intervals, start, end, data, constant=1):
 
-    #S is the somersault factor that decides the somersault range of manta rays and 𝑆 = 2, 𝑟2 and 𝑟3 are two random numbers in [0, 1]
+    #S is the somersault factor that decides the somersault range of manta rays and 𝑆 = 2, 𝑟2 and 𝑟3 are two random numbers in [0, 1]    
     somersault = 2
 
     # make sure it is weights, days, alpha pattern. Tried to change a few of these parameters but didn't do much
@@ -48,7 +48,6 @@ def manta_ray_algo(scoring, weights, days, alphas, num_pop, max_iterations, inte
             best_solution = p.pos
 
     for iteration in range(max_iterations):
-
         current_best = best_solution
         for i in range(num_pop):
             rand = np.random.rand()
@@ -93,9 +92,16 @@ def manta_ray_algo(scoring, weights, days, alphas, num_pop, max_iterations, inte
         for p in points:
             if p.score > best_fitness:
                 best_fitness = p.score
-                best_solution = p.pos
-
+                best_solution = p.pos.copy()
     return best_solution
+
+# training model copied from, not tested yet
+#models = dr.Train(TRAIN_START, TRAIN_END, TEST_START, TEST_END, step_size=86400 )  # (train_start, train_end, test_start, test_end, step_size)
+# the days, weights, alphas lists are in the form of [min_value, max_value, number_of_values]
+# step_size is in seconds for x minutes use 60 * x for x hours use 60 * 60 * x and so on
+# (model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1)
+#models.train_model(manta_ray_algo, [1, 100, 6], [0.001, 10, 6], [0.01, 5, 2], max_iter=50, num_pop=10, constant=1)  # (model, days, weights, alphas, max_iter, num_pop, constant)
+#models.compare_models()
 
 #models = dr.train("01/03/2021", "15/06/2021", "01/10/2021", "01/12/2021",
 #step_size=86400) always returns a negative. Not sure why.
@@ -116,6 +122,3 @@ weight = [1.0, 2.0] * 3 + [0.1, 0.9] * 3
 days = [1, 100] * 3 + [1, 100] * 3
 
 alpha = [0.1, 1, 0.1, 1]
-
-
-
