@@ -1,20 +1,16 @@
+from abc import ABC, abstractmethod
+import NatureBasedAlgorithm
 import numpy as np
 import pandas as pd
 import data_reader as dr
 
 
-class hawk():
+class hawk(NatureBasedAlgorithm):
     def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
-        self.scoring = scoring
-        self.start = start
-        self.end = end
-        self.data = data
-        self.intervals = intervals
-        w = np.random.uniform(weights[0], weights[1], size=weights[2])
-        d = np.random.uniform(days[0], days[1], size=days[2])
-        a = np.random.uniform(alphas[0], alphas[1], size=alphas[2])
-        self.pos = np.concatenate((w, d, a))       
-        self.score = scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], start, end, data)
+        super().__init__(name="Hawk", description="Harris Hawks Optimization",
+                         scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
+                         start=start, end=end, data=data)
+    
     def change_pos(self, new_pos):
         new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)       # weights
         new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)       # days
@@ -23,6 +19,9 @@ class hawk():
         self.pos = new_pos
         self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
 
+    def optimize(self, num_agents, iterations, constant=1):
+        """Abstract method for the optimization process."""
+        pass
 
 def HHO(scoring, days, weights, alphas, num_hawks, iterations, intervals, start, end, data, constant=1):
     hawks = [hawk(scoring, days, weights, alphas, intervals, start, end, data) for _ in range(num_hawks)]

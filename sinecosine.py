@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+import NatureBasedAlgorithm
 import numpy as np
 import pandas as pd
 import data_reader as dr

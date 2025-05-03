@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+import NatureBasedAlgorithm
 import numpy as np
 import data_reader2 as dr
 from random import randint
