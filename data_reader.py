@@ -106,10 +106,8 @@ class Train:
         return int(time.mktime(dt.timetuple()))
 
     def score(self, weights, days, alphas, start, end, data):
-        print("scoring: part 1")
         days = [min(30, max(1, abs(int(round(d))))) for d in days]
         alphas = [min(1, max(0, a)) for a in alphas]
-        print("scoring: part 2")
         
         max_days_needed = max(days)
         if end - start < max_days_needed * 86400:
@@ -119,8 +117,6 @@ class Train:
         current_signal = -1
         day_counter = 0
         
-        print("scoring: part 3")
-
         while current_time <= end:
             high = sum([
                 weights[0] * data.current_WMA(days[0], data.SMA(days[0]), current_time),
@@ -178,7 +174,7 @@ class Train:
     #    self.models[model] = best
     #    return error
 
-    def test_model(self, model:NatureBasedAlgorithm):
+    def test_model(self, model: NatureBasedAlgorithm):
         result = self.score(
             self.models[model.name][:6],
             self.models[model.name][6:12],
