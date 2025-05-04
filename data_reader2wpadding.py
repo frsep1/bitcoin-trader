@@ -34,7 +34,8 @@ class historic_data:
         return np.ones(n) / n
 
     def EMA(self, n, alpha):
-        return np.array([alpha * (1 - alpha) ** i for i in range(n)])
+        print(np.flip(np.array([alpha * (1 - alpha) ** i for i in range(n)])))
+        return np.flip(np.array([alpha * (1 - alpha) ** i for i in range(n)]))
 
     def LMA(self, n):
         return np.array((2 / (n + 1)) * (1 - np.arange(n) / n))

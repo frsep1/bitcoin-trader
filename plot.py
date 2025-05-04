@@ -2,12 +2,12 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime
 import data_reader as dr
+from equations import original, MACD
 
 class Plotter:
-    def __init__(self, data, models, freq_function):
+    def __init__(self, data, models):
         self.data = data
         self.models = models
-        self.freq_function = freq_function
         self.plot_data = {}
 
     def get_plotting_data(self):
@@ -16,30 +16,31 @@ class Plotter:
         self.prices = [self.data.current_price(t) for t in timestamps]
         
         for model in self.models:
-            highs = []
             balance = dr.Balance()
             balance_line = []
-            lows = []
             buy_signals = []
-            sell_signals = []
-            days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model][6:12]]
-            current_signal = -1
-            for t in timestamps:
+            sell_signals = []            
+            if len(self.models[model]) == 14:
+                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model][6:12]]
+                highs, lows = original({'weights':self.models[model][:6], "days":days, "alphas":self.models[model][12:14]}, self.data)
+            else:
+                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model][:3]]
+                highs, lows = MACD({'days':self.models[model][:3], "alphas":self.models[model][3:]}, self.data)
 
-                high, low = self.freq_function({'weights':self.models[model][:6], "days":days, "alphas":self.models[model][12:14]}, t, self.data)
-                highs.append(high)
-                lows.append(low)
+            last_signal = "sell"
+            for i, t in enumerate(timestamps):
 
-                if high < low:
-                    if current_signal == -1:
-                        balance.buy(self.data.current_price(t))
-                        buy_signals.append((t, self.data.current_price(t)))
-                        current_signal = 1
-                elif high > low:
-                    if current_signal == 1:
-                        balance.sell(self.data.current_price(t))
-                        sell_signals.append((t, self.data.current_price(t)))
-                        current_signal = -1
+                if highs[i] < lows[i]:
+                    if last_signal == "buy":
+                        balance.sell(self.prices[i])
+                        sell_signals.append((self.times[i], self.prices[i]))
+                        last_signal = "sell"
+
+                elif highs[i] > lows[i]:
+                    if last_signal == "sell":
+                        balance.buy(self.prices[i])
+                        buy_signals.append((self.times[i], self.prices[i]))
+                        last_signal = "buy"
 
                 if balance.get_balance() == 0:
                     balance_line.append((balance.btc * self.data.current_price(t))*0.97)
@@ -57,7 +58,7 @@ class Plotter:
 
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
-        ax.set_title("Price, High Signal, and Low Signal Over Time")
+        ax.set_title(f"{model} Signals Plot")
 
         # Show only 10 x-axis ticks (or fewer if the dataset is small)
         step = max(1, len(self.times) // 10)
@@ -83,13 +84,11 @@ class Plotter:
         ax1.set_xlabel("Date")
         ax1.set_ylabel("Price", color='black')
         ax1.tick_params(axis='y', labelcolor='black')
-        ax1.set_title("Buy/Sell Signal Plot")
+        ax1.set_title(f"{model} Buy/Sell Signal Plot")
 
         # Markers for buy/sell
-        for i, t, p in enumerate(zip(self.times, self.prices)):
-            ax1.scatter(t, p, marker='^', color='green', label='buy' if t == self.plot_data[model]['buy_signals'][i] else "")
-        for i, t, p in enumerate(zip(self.times, self.prices)):
-            ax1.scatter(t, p, marker='v', color='red', label='sell' if t == self.plot_data[model]['sell_signals'][i] else "")
+        ax1.scatter([t for t, p in self.plot_data[model]['buy_signals']], [p for t, p in self.plot_data[model]['buy_signals']], marker='^', color='green', label='buy')
+        ax1.scatter([t for t, p in self.plot_data[model]['sell_signals']], [p for t, p in self.plot_data[model]['sell_signals']], marker='v', color='red', label='sell')
 
         # Secondary y-axis for difference signal
         ax2 = ax1.twinx()
@@ -102,6 +101,13 @@ class Plotter:
         lines_1, labels_1 = ax1.get_legend_handles_labels()
         lines_2, labels_2 = ax2.get_legend_handles_labels()
         ax1.legend(lines_1 + lines_2, labels_1 + labels_2)
+
+        step = max(1, len(self.times) // 10)
+        ax1.set_xticks(self.times[::step])
+        ax1.set_xticklabels(
+            [dt.strftime("%d-%m-%y") for dt in self.times[::step]],
+            rotation=45
+        )
 
         fig.tight_layout()
         plt.xticks(rotation=45)
