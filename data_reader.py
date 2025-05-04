@@ -51,7 +51,7 @@ class HistoricData:
         return np.append(padding, p)
 
     def WMA(self, p, n, kernel):
-        return np.convolve(p, kernel, mode='valid')
+        return np.convolve(p, np.flip(kernel), mode='valid')
 
     # Calculates the WMA and checks to see if padding is required
     def current_WMA(self, n, kernel, timestamp):
