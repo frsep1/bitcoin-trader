@@ -13,7 +13,7 @@ class point(NatureBasedAlgorithm):
     def change_pos(self, new_pos):
         super().change_pos(new_pos)
     
-    def optimize(self, num_agents, iterations, constant=1):
+    def optimise(self, num_agents, iterations, constant=1):
         points = [point(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
         best_pos = np.zeros(14)
         best_score = 0
