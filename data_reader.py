@@ -3,10 +3,10 @@ import numpy as np
 import time
 import datetime
 import NatureBasedAlgorithm
+from equations import MACD, original
 
-
-class HistoricData:
-    def __init__(self, start, end, buffer_days=0):
+class historic_data:
+    def __init__(self, start, end):
         dtype = {
             'unix': np.int64,
             'open': np.float64,
@@ -18,191 +18,157 @@ class HistoricData:
             'date': 'str',
             'symbol': 'str'
         }
-
         self.df = pd.read_csv('BTC-Daily.csv', dtype=dtype)
         self.df = self.df.drop(columns=['Volume BTC', 'Volume USD', 'symbol', 'date'])
-
-        # Include a buffer period to allow back-calculating WMAs
-        buffer_start = start - buffer_days * 86400
-
-        self.df = self.df[(self.df['unix'] >= buffer_start) & (self.df['unix'] <= end)]
-
-
+        self.df = self.df[(self.df['unix'] >= start) & (self.df['unix'] <= end)]
         self.df = self.df.set_index('unix')
-
-        # doesn't work without this because of the excel order
+        # didn't originally work because it was finding ascending. Therefore need to sort
         self.df = self.df.sort_index()
 
+    # \/\/\/ private methods \/\/\/
+
+    def pad(self, p, n):
+        padding = -np.flip(p[1:n])
+        return np.append(padding, p)
 
     def SMA(self, n):
         return np.ones(n) / n
 
     def EMA(self, n, alpha):
-        return np.array([alpha * (1 - alpha) ** i for i in range(n)])
+        return np.flip(np.array([alpha * (1 - alpha) ** i for i in range(n)]))
 
     def LMA(self, n):
         return np.array((2 / (n + 1)) * (1 - np.arange(n) / n))
 
-    # This modifies all points
-    def pad(self, p, n):
-        padding = -np.flip(p[1:n])
-        #print([n,len(p),len(padding)])
-        return np.append(padding, p)
-
     def WMA(self, p, n, kernel):
-        return np.convolve(p, kernel, mode='valid')
+        return np.convolve(self.pad(p, n), kernel, mode='valid')
 
-    # Calculates the WMA and checks to see if padding is required
-    def current_WMA(self, n, kernel, timestamp):
-        # Gets data points from time t - n_days to time t
-        p = self.df.loc[timestamp - n * 86400:timestamp]['close'].values
-        # Check if we have enough data points; pad if necessary
-        if len(p) < n:
-            # Gets t to t + n_days datapoints
-            p = self.df.loc[timestamp:timestamp + n * 86400]['close'].values
-            # Creates new padded data points
-            p = self.pad(p, n)
+    def current_price(self, time):
+        return self.df.loc[time]['close']
 
-        return self.WMA(p, n, kernel)[-1]
+    def get_start(self):
+        return self.start
 
-    def current_price(self, timestamp):
-        return self.df.loc[timestamp]['close']
-    
-    def head(self):
-        return self.df.head(5)
+    def get_end(self):
+        return self.end
 
-class Balance:
-    def __init__(self, initial_balance=1000):
-        self.fiat = initial_balance
-        self.btc = 0
+
+class balance():
+    def __init__(self, balance=1000):
+        self.my_balance = balance
+        self.bitcoin = 0
+
+    def get_my_balance(self):
+        return self.my_balance
 
     def buy(self, price):
-        self.btc += (self.fiat / price) * 0.97
-        self.fiat = 0
+        bitcoins = (self.my_balance / price) * 0.97
+        self.bitcoin += bitcoins
+        self.my_balance = 0
 
     def sell(self, price):
-        self.fiat += (self.btc * price) * 0.97
-        self.btc = 0
-
-    def get_balance(self):
-        return self.fiat
+        self.my_balance += (self.bitcoin * price) * 0.97
+        self.bitcoin = 0
 
 
-class Train:
+class Train():
     def __init__(self, train_start, train_end, test_start, test_end, step_size=86400):
         self.train_start = self.to_unix(train_start)
         self.train_end = self.to_unix(train_end)
         self.test_start = self.to_unix(test_start)
         self.test_end = self.to_unix(test_end)
-        self.train_data = HistoricData(self.train_start, self.train_end, buffer_days=0)
-        self.test_data = HistoricData(self.test_start, self.test_end, buffer_days=0)
+        self.train_data = historic_data(self.train_start, self.train_end)
+        self.test_data = historic_data(self.test_start, self.test_end)
         self.models = {}
         self.step_size = step_size
 
+    # this excel records it as +8 which is different from original excel which was +0.
     def to_unix(self, date_str):
-
         dt = datetime.datetime.strptime(date_str, "%d/%m/%Y")
         dt = dt + datetime.timedelta(hours=8)
         return int(time.mktime(dt.timetuple()))
 
-    def score(self, weights, days, alphas, start, end, data):
+    def score(self, data, equation, weights=[], days=[], alphas=[]):
+        # Making days integers and positive
         days = [min(30, max(1, abs(int(round(d))))) for d in days]
+        # Making alphas floats and between 0 and 1
         alphas = [min(1, max(0, a)) for a in alphas]
-        
-        max_days_needed = max(days)
-        if end - start < max_days_needed * 86400:
-            raise ValueError("Training/test window is too short for chosen WMA window sizes.")
-        current_time = start # + 30 * 86400
-        balance = Balance()
-        current_signal = -1
-        day_counter = 0
-        
-        while current_time <= end:
-            high = sum([
-                weights[0] * data.current_WMA(days[0], data.SMA(days[0]), current_time),
-                weights[1] * data.current_WMA(days[1], data.LMA(days[1]), current_time),
-                weights[2] * data.current_WMA(days[2], data.EMA(days[2], alphas[0]), current_time)
-            ]) / sum(weights[:3])
 
-            low = sum([
-                weights[3] * data.current_WMA(days[3], data.SMA(days[3]), current_time),
-                weights[4] * data.current_WMA(days[4], data.LMA(days[4]), current_time),
-                weights[5] * data.current_WMA(days[5], data.EMA(days[5], alphas[1]), current_time)
-            ]) / sum(weights[3:])
+        my_balance = balance()
+        last_signal = "sell"
+        print([days, alphas])
+        highs, lows = equation({'weights':weights, 'days':days, 'alphas':alphas}, data)
 
-            if high < low:
-                if current_signal == -1:
-                    balance.buy(data.current_price(current_time))
-                    current_signal = 1
-            elif high > low:
-                if current_signal == 1:
-                    balance.sell(data.current_price(current_time))
-                    current_signal = -1
-            current_time += self.step_size
-            day_counter += 1
+        for i, t in enumerate(data.df.index):      
 
-        if current_signal == 1:
-            balance.sell(data.current_price(current_time - self.step_size))
+            if highs[i] > lows[i]:
+                if last_signal == "sell":
+                    my_balance.buy(data.current_price(t))
+                    last_signal = "buy"
+            elif highs[i] < lows[i]:
+                if last_signal == "buy":
+                    my_balance.sell(data.current_price(t))
+                    last_signal = "sell"
 
-        #print(f"[DEBUG - score] Number of training days simulated: {day_counter}")
-        return balance.get_balance()
+        if last_signal == "buy":
+            my_balance.sell(data.current_price(data.df.index[-1]))
+        return my_balance.get_my_balance()
 
+    # returns score if we were to just buy at the start and sell at the end
     def baseline_score(self):
         start_price = self.test_data.current_price(self.test_start)
         end_price = self.test_data.current_price(self.test_end)
-        bal = Balance()
-        bal.buy(start_price)
-        bal.sell(end_price)
-        return bal.get_balance()
+        my_balance = balance()
+        my_balance.buy(start_price)
+        my_balance.sell(end_price)
+        return my_balance.get_my_balance()
 
+    # adds the returned value of models to the models dict
+    # the value returned should be in the form [weight1, ..., weightsn, day1, ..., dayn, alpha1, ..., alphan]
     def train_model(self, model: NatureBasedAlgorithm, num_agents, num_iterations):
-        best = model.optimise(num_agents, num_iterations, constant=1)
+        best = model.optimize(num_agents, num_iterations, constant=1)
         self.models[model.name] = best
-        return self.score(
-            self.models[model.name][:6],
-            self.models[model.name][6:12],
-            self.models[model.name][12:14],
-            self.train_start, self.train_end, self.train_data
-        )
-    
-    #def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1):
-    #    best, error = model(
-    #        self.score, days, weights, alphas, num_pop, max_iter,
-    #        self.step_size, self.train_start, self.train_end,
-    #        self.train_data, constant=constant
-    #    )
-    #    self.models[model] = best
-    #    return error
+        return best
 
-    def test_model(self, model: NatureBasedAlgorithm):
-        result = self.score(
-            self.models[model.name][:6],
-            self.models[model.name][6:12],
-            self.models[model.name][12:14],
-            self.test_start, self.test_end, self.test_data
-        )
-        return result
+    def test_model(self, model):
+        if len(self.models[model]) == 14:
+            return self.score(
+                self.test_data,
+                original,
+                weights = self.models[model][:6],
+                days = self.models[model][6:12],
+                alphas = self.models[model][12:14]
+            )
+        else:
+            return self.score(
+                self.test_data,
+                MACD,
+                days = self.models[model][:3],
+                alphas = self.models[model][3:]
+            )
 
-    #def test_model(self, model):
-    #    result = self.score(
-    #        self.models[model][:6],
-    #        self.models[model][6:12],
-    #        self.models[model][12:14],
-    #        self.test_start, self.test_end, self.test_data
-    #    )
-    #    return result
-
+    # compares all the models in the models dict
+    # prints the score of each model and the best model
     def compare_models(self):
         baseline = self.baseline_score()
-        print(f"Baseline score: {baseline}\n")
         results = {}
         for model in self.models:
             results[model] = self.test_model(model)
-            print(f"Model: {model}, Score: {results[model]}")
-            print(f"Weights: {self.models[model][:6]}")
-            print(f"Days: {self.models[model][6:12]}")
-            print(f"Alphas: {self.models[model][12:14]}\n")
-            print([results[model], self.models[model][12:14]])
-        best_model = max(results, key=results.get)
-        print(f"Best model: {best_model}, Score: {results[best_model]}")
-        print(f"Profit over baseline: {results[best_model] - baseline}")
+            print(f"Model: {model}")
+            print(f"Score: ${results[model]:.2f}")
+            if len(self.models[model]) == 14:
+                print("Equation: Original")
+                print(f"Weights: {np.array2string(self.models[model][0:6], precision=4, floatmode='fixed')}")
+            else:
+                print("Equation: MACD")
+            print(f"Days: {np.array2string(self.models[model][6:12], precision=0, floatmode='fixed')}") # fixed the order so it matches what is put into train_models
+            print(f"Alphas: {np.array2string(self.models[model][12:14], precision=4, floatmode="fixed")}\n")
+            print(f"-------------------------------------------------------------------")
+        print(f"-------------------------------------------------------------------")
+        print(f"Baseline score: {baseline:.2f}\n")
+        print(f"Best model: {max(results, key=results.get)}, Score: {max(results.values())}")
+        print(f"Model made {max(results.values()) - baseline} profit over baseline")
+
+
+
+

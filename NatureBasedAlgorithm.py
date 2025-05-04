@@ -2,16 +2,14 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 import data_reader as dr
+from equations import MACD, original
 
 class NatureBasedAlgorithm:
-    def __init__(self, name, description, scoring, days, weights, alphas, intervals, start, end, data):
+    def __init__(self, name, description, scoring, days, weights, alphas, data):
         self.name = name
         self.description = description
         
-        self.start = start
-        self.end = end
         self.data = data
-        self.intervals = intervals
 
         self.days = days
         self.weights = weights
@@ -28,14 +26,21 @@ class NatureBasedAlgorithm:
         d = np.random.uniform(self.days[0], self.days[1], size=self.days[2])
         a = np.random.uniform(self.alphas[0], self.alphas[1], size=self.alphas[2])
         self.pos = np.concatenate((w, d, a))
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        if len(self.pos) == 6:
+            self.pos = np.concatenate((d, a))
+            self.score = self.scoring(self.data, MACD, days=self.pos[:3], alphas=self.pos[3:])
+        else:
+            self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
     
-    def change_position(self, new_pos):
+    def change_pos(self, new_pos):
         self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        if len(self.pos) == 6:
+            self.score = self.scoring(self.data, MACD, days=self.pos[:3], alphas=self.pos[3:])
+        else:
+            self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
     
     @abstractmethod
-    def optimise(self, num_agents, num_iterations, constant=1):
+    def optimize(self, num_agents, num_iterations, constant=1):
         """Abstract method for the optimization process."""
         pass
     

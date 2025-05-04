@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import numpy as np
-import data_reader2 as dr
 from random import randint
 from NatureBasedAlgorithm import NatureBasedAlgorithm
 
@@ -9,10 +8,9 @@ from NatureBasedAlgorithm import NatureBasedAlgorithm
 # Article by Zhao, Zhang & Wang
 
 class MRFO(NatureBasedAlgorithm):
-    def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
-        super().__init__(name="SineCosine", description="Sine Cosine Optimization",
-                         scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
-                         start=start, end=end, data=data)
+    def __init__(self, scoring, days, weights, alphas, data):
+        super().__init__(name="MRFO", description="Manta Ray Foraging Optimization",
+                         scoring=scoring, days=days, weights=weights, alphas=alphas, data=data)
     
     def change_pos(self, new_pos):
         super().change_pos(new_pos)
@@ -22,10 +20,23 @@ class MRFO(NatureBasedAlgorithm):
         somersault = 2
         
         # make sure it is weights, days, alpha pattern. Tried to change a few of these parameters but didn't do much
-        lower_bound = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1,1, 1, 1, 1, 1, 1, 0.1, 0.1])
-        upper_bound = np.array([1, 1, 1, 1, 1, 1, 100, 100, 100, 100, 100, 100, 1, 1])
+        lower_bound = []
+        upper_bound = []
         
-        points = [MRFO(self.scoring, self.weights, self.days, self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]
+        points = [MRFO(self.scoring, self.weights, self.days, self.alphas, self.data) for _ in range(num_agents)]
+
+        for i in range(self.weights[2]):
+            lower_bound.append(self.weights[0])
+            upper_bound.append(self.weights[1])
+        for i in range(self.days[2]):
+            lower_bound.append(self.days[0])
+            upper_bound.append(self.days[1])
+        for i in range(self.alphas[2]):
+            lower_bound.append(self.alphas[0])
+            upper_bound.append(self.alphas[1])
+
+        lower_bound = np.array(lower_bound)
+        upper_bound = np.array(upper_bound)
         
         best_fitness = -1
         best_solution = None
@@ -45,7 +56,7 @@ class MRFO(NatureBasedAlgorithm):
                 if rand < 0.5:
                     beta = np.random.rand()
                     rand2 = np.random.rand()
-                    x_rand = points[randint(1, num_pop-1)].pos
+                    x_rand = points[randint(1, num_agents-1)].pos
                     if iteration / iterations < rand:
                         if i == 0:
                             new_position = x_rand + rand2 * (x_rand - current) + beta * (x_rand - current)
@@ -85,23 +96,23 @@ class MRFO(NatureBasedAlgorithm):
 
 # === RUN SECTION ===
 
-# Define parameters
-days = [1, 100, 6]     # [min_value, max_value, number_of_values]
-weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
-alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
-step_size = 60*100     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
+# # Define parameters
+# days = [1, 100, 6]     # [min_value, max_value, number_of_values]
+# weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
+# alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
+# step_size = 60*100     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
 
-models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
+# models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
 
-alg: NatureBasedAlgorithm = MRFO(models.score, days, weights, alphas, step_size,
-                                  models.train_start, models.train_end, models.train_data)
+# alg: NatureBasedAlgorithm = MRFO(models.score, days, weights, alphas, step_size,
+#                                   models.train_start, models.train_end, models.train_data)
 
-models.train_model(alg,  num_agents=20, num_iterations=10)
-models.compare_models()
+# models.train_model(alg,  num_agents=20, num_iterations=10)
+# models.compare_models()
 
-# if I want to try to make a high and low
-weight = [1.0, 2.0] * 3 + [0.1, 0.9] * 3
+# # if I want to try to make a high and low
+# weight = [1.0, 2.0] * 3 + [0.1, 0.9] * 3
 
-days = [1, 100] * 3 + [1, 100] * 3
+# days = [1, 100] * 3 + [1, 100] * 3
 
-alpha = [0.1, 1, 0.1, 1]
+# alpha = [0.1, 1, 0.1, 1]

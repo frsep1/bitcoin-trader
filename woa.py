@@ -3,18 +3,18 @@ import numpy as np
 import pandas as pd
 import data_reader as dr
 from NatureBasedAlgorithm import NatureBasedAlgorithm
+from equations import MACD, original
 
 class whale(NatureBasedAlgorithm):
-    def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
+    def __init__(self, scoring, days, weights, alphas, data):
         super().__init__(name="Whale", description="Whale Optimization",
-                         scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
-                         start=start, end=end, data=data)
+                         scoring=scoring, days=days, weights=weights, alphas=alphas, data=data)
     
     def change_pos(self, new_pos):
         super().change_pos(new_pos)
     
     def optimize(self, num_agents, iterations, constant=1):
-        whales = [whale(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
+        whales = [whale(self.scoring, self.days, self.weights, self.alphas, self.data) for i in range(num_agents)]
         best_pos = np.zeros(14)
         best_score = 0
         for i in range(num_agents):
@@ -60,13 +60,13 @@ weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
 alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
 step_size = 60*100     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
 
-models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
+#models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
 
-alg: NatureBasedAlgorithm = whale(models.score, days, weights, alphas, step_size,
-                                  models.train_start, models.train_end, models.train_data)
+#alg: NatureBasedAlgorithm = whale(models.score, days, weights, alphas, step_size,
+                                 # models.train_start, models.train_end, models.train_data)
 
-models.train_model(alg,  num_agents=20, num_iterations=10)
-models.compare_models()
+#models.train_model(alg,  num_agents=20, num_iterations=10)
+#models.compare_models()
 
 #10 whales, 10 iterations = $6.369556456832015 profit over baseline
 #20 whales, 10 iterations = -$83.41078505604878 profit over baseline
