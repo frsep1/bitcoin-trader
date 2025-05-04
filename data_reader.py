@@ -53,7 +53,7 @@ class historic_data:
         return self.end
 
 
-class balance():
+class Balance():
     def __init__(self, balance=1000):
         self.my_balance = balance
         self.bitcoin = 0
@@ -94,9 +94,8 @@ class Train():
         # Making alphas floats and between 0 and 1
         alphas = [min(1, max(0, a)) for a in alphas]
 
-        my_balance = balance()
+        my_balance = Balance()
         last_signal = "sell"
-        print([days, alphas])
         highs, lows = equation({'weights':weights, 'days':days, 'alphas':alphas}, data)
 
         for i, t in enumerate(data.df.index):      
@@ -118,7 +117,7 @@ class Train():
     def baseline_score(self):
         start_price = self.test_data.current_price(self.test_start)
         end_price = self.test_data.current_price(self.test_end)
-        my_balance = balance()
+        my_balance = Balance()
         my_balance.buy(start_price)
         my_balance.sell(end_price)
         return my_balance.get_my_balance()
@@ -162,7 +161,7 @@ class Train():
             else:
                 print("Equation: MACD")
             print(f"Days: {np.array2string(self.models[model][6:12], precision=0, floatmode='fixed')}") # fixed the order so it matches what is put into train_models
-            print(f"Alphas: {np.array2string(self.models[model][12:14], precision=4, floatmode="fixed")}\n")
+            print(f"Alphas: {np.array2string(self.models[model][12:14], precision=4, floatmode='fixed')}\n")
             print(f"-------------------------------------------------------------------")
         print(f"-------------------------------------------------------------------")
         print(f"Baseline score: {baseline:.2f}\n")

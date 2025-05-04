@@ -42,10 +42,10 @@ class Plotter:
                         buy_signals.append((self.times[i], self.prices[i]))
                         last_signal = "buy"
 
-                if balance.get_balance() == 0:
-                    balance_line.append((balance.btc * self.data.current_price(t))*0.97)
+                if balance.get_my_balance() == 0:
+                    balance_line.append((balance.my_balance * self.data.current_price(t))*0.97)
                 else:
-                    balance_line.append(balance.get_balance())
+                    balance_line.append(balance.get_my_balance())
 
             self.plot_data[model] = {"highs":highs, "lows":lows, "balance_line":balance_line, "balance":balance, 'buy_signals':buy_signals, 'sell_signals':sell_signals}
  
@@ -122,7 +122,7 @@ class Plotter:
         fig, ax = plt.subplots(figsize=(14, 6))
         ax.plot(self.times, baseline, label=f'Baseline {round(baseline[-1],2)}', color='black', linewidth=1.5)
         for model in self.models:
-            ax.plot(self.times, self.plot_data[model]['balance_line'], label=f'{model} {round(self.plot_data[model]['balance_line'][-1],2)}', linewidth=1.5)
+            ax.plot(self.times, self.plot_data[model]['balance_line'], label=f"{model} {round(self.plot_data[model]['balance_line'][-1],2)}", linewidth=1.5)
         ax.set_xlabel("Date")
         ax.set_ylabel("Balance (USD)")
         ax.set_title("Balances Over Time")

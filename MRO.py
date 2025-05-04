@@ -23,7 +23,7 @@ class MRFO(NatureBasedAlgorithm):
         lower_bound = []
         upper_bound = []
         
-        points = [MRFO(self.scoring, self.weights, self.days, self.alphas, self.data) for _ in range(num_agents)]
+        points = [MRFO(self.scoring, self.days, self.weights, self.alphas, self.data) for _ in range(num_agents)]
 
         for i in range(self.weights[2]):
             lower_bound.append(self.weights[0])

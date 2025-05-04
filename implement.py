@@ -17,7 +17,7 @@ OG_ALPHA_BOUNDS = [0.01, 1, 2]
 MACD_DAY_BOUNDS = [1, 100, 3]
 MACD_WEIGHT_BOUNDS = [0.001, 10, 0]
 MACD_ALPHA_BOUNDS = [0.01, 1, 3]
-MAX_ITER = 1000
+MAX_ITER = 100
 NUM_AGENTS = 20
 
 models = Train(TRAIN_START, TRAIN_END, TEST_START, TEST_END, step_size=86400)
@@ -26,7 +26,7 @@ print("\n")
 for d, w, a in [(MACD_DAY_BOUNDS, MACD_WEIGHT_BOUNDS, MACD_ALPHA_BOUNDS), (OG_DAY_BOUNDS, OG_WEIGHT_BOUNDS, OG_ALPHA_BOUNDS)]:
     for alg in [MRFO, whale, SCA]:
         start_time = time.perf_counter()
-        alg_instance = alg(models.score, d, w, a, models.train_data)
+        alg_instance = alg(models.score, days=d, weights=w, alphas=a, data=models.train_data)
         models.train_model(alg_instance,  num_agents=NUM_AGENTS, num_iterations=MAX_ITER)
         print(f"{alg} Time: {time.perf_counter() - start_time:.4f}")
 
