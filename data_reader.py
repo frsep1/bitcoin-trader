@@ -161,7 +161,8 @@ class Train:
         model.best_pos = model.optimise(num_agents, num_iterations, constant=1)
         model.best_score = self.score(model.best_pos[0:6],
                                       model.best_pos[6:12],
-                                      model.best_pos[12:14])
+                                      model.best_pos[12:14],
+                                      self.train_start, self.train_end, self.train_data)
         
         self.models[model.name] = model
         
