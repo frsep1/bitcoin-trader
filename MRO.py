@@ -34,7 +34,7 @@ class MRFO(NatureBasedAlgorithm):
         
         best_fitness = float("-inf")
 
-        best_solution = points[0].pos
+        best_solution = None
         
         for p in points:
             if p.score > best_fitness:
