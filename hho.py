@@ -10,6 +10,7 @@ class hawk(NatureBasedAlgorithm):
         super().__init__(name="Hawk", description="Harris Hawks Optimization",
                          scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
                          start=start, end=end, data=data)
+    
     def change_pos(self, new_pos):
         new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)       # weights
         new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)       # days
@@ -78,6 +79,12 @@ class hawk(NatureBasedAlgorithm):
 # Define parameters
 
 models = dr.Train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100)
+print(models.train_start)
+print(models.train_end)
+print(models.test_start)
+print(models.test_end)
+print(models.step_size)
+print(models.train_data.head())
 
 #scoring, days, weights, alphas, intervals, start, end, data
 

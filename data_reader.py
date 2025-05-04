@@ -67,7 +67,9 @@ class HistoricData:
 
     def current_price(self, timestamp):
         return self.df.loc[timestamp]['close']
-
+    
+    def head(self):
+        return self.df.head(5)
 
 class Balance:
     def __init__(self, initial_balance=1000):
