@@ -156,14 +156,16 @@ class Train:
         return bal.get_balance()
 
     def train_model(self, model: NatureBasedAlgorithm, num_agents, num_iterations):
-        best = model.optimise(num_agents, num_iterations, constant=1)
-        self.models[model.name] = best
-        return self.score(
-            self.models[model.name][:6],
-            self.models[model.name][6:12],
-            self.models[model.name][12:14],
-            self.train_start, self.train_end, self.train_data
-        )
+        print(f"Training model: {model.name}")
+        print(f"Optimising...")
+        model.best_pos = model.optimise(num_agents, num_iterations, constant=1)
+        model.best_score = self.score(model.best_pos[0:6],
+                                      model.best_pos[6:12],
+                                      model.best_pos[12:14])
+        
+        self.models[model.name] = model
+        
+        return model.best_score
     
     #def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1):
     #    best, error = model(
@@ -196,13 +198,17 @@ class Train:
         baseline = self.baseline_score()
         print(f"Baseline score: {baseline}\n")
         results = {}
+        
+        print(f"{self.models}")
+        
         for model in self.models:
-            results[model] = self.test_model(model)
-            print(f"Model: {model}, Score: {results[model]}")
-            print(f"Weights: {self.models[model][:6]}")
-            print(f"Days: {self.models[model][6:12]}")
-            print(f"Alphas: {self.models[model][12:14]}\n")
-            print([results[model], self.models[model][12:14]])
-        best_model = max(results, key=results.get)
-        print(f"Best model: {best_model}, Score: {results[best_model]}")
-        print(f"Profit over baseline: {results[best_model] - baseline}")
+            print(model)
+            #results[model] = self.test_model(model.name)
+            #print(f"Model: {model}, Score: {results[model]}")
+            #print(f"Weights: {self.models[model][0:6]}")
+            #print(f"Days: {self.models[model][6:12]}")
+            #print(f"Alphas: {self.models[model][12:14]}\n")
+            #print([results[model], self.models[model][12:14]])
+        #best_model = max(results, key=results.get)
+        #print(f"Best model: {best_model}, Score: {results[best_model]}")
+        #print(f"Profit over baseline: {results[best_model] - baseline}")

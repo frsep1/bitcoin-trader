@@ -22,6 +22,9 @@ class NatureBasedAlgorithm:
         self.score = None
         self.initial_position()
         
+        self.best_pos = None
+        self.best_score = None
+        
     def initial_position(self):
         """Initialize the position based on weights, days, and alphas."""
         w = np.random.uniform(self.weights[0], self.weights[1], size=self.weights[2])
