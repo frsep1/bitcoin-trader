@@ -8,16 +8,19 @@ class NatureBasedAlgorithm:
         self.name = name
         self.description = description
         
-        self.scoring = scoring
         self.start = start
         self.end = end
         self.data = data
         self.intervals = intervals
-        self.data = data
+
         self.days = days
         self.weights = weights
         self.alphas = alphas
-        self.initial_position(scoring)
+        
+        self.scoring = scoring
+        self.pos = None
+        self.score = None
+        self.initial_position()
         
     def initial_position(self):
         """Initialize the position based on weights, days, and alphas."""

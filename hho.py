@@ -78,7 +78,11 @@ class hawk(NatureBasedAlgorithm):
 # Define parameters
 
 models = dr.Train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100)
-alg: NatureBasedAlgorithm = hawk(models.score, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=20, constant=1)
+
+#scoring, days, weights, alphas, intervals, start, end, data
+
+#alg: NatureBasedAlgorithm = hawk(models.score, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], 60*100,
+#                                 models.train_start, models.train_end, models.train_data)
 #models.train_model(NatureBasedAlgorithm,  num_agents=20, num_iterations=10)
 #models.compare_models()
 
