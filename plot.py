@@ -4,10 +4,8 @@ from datetime import datetime
 import data_reader as dr
 
 class Plotter:
-    def __init__(self, data, start, end, models, freq_function):
+    def __init__(self, data, models, freq_function):
         self.data = data
-        self.start = start
-        self.end = end
         self.models = models
         self.freq_function = freq_function
         self.plot_data = {}
