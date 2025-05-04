@@ -79,7 +79,7 @@ class hawk(NatureBasedAlgorithm):
 days = [1, 100, 6]     # [min_value, max_value, number_of_values]
 weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
 alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
-step_size = 60*100     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
+step_size = 86400     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
 
 models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
 
