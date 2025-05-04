@@ -106,8 +106,11 @@ class Train:
         return int(time.mktime(dt.timetuple()))
 
     def score(self, weights, days, alphas, start, end, data):
+        print("scoring: part 1")
         days = [min(30, max(1, abs(int(round(d))))) for d in days]
         alphas = [min(1, max(0, a)) for a in alphas]
+        print("scoring: part 2")
+        
         max_days_needed = max(days)
         if end - start < max_days_needed * 86400:
             raise ValueError("Training/test window is too short for chosen WMA window sizes.")
@@ -115,6 +118,8 @@ class Train:
         balance = Balance()
         current_signal = -1
         day_counter = 0
+        
+        print("scoring: part 3")
 
         while current_time <= end:
             high = sum([

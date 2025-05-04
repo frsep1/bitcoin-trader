@@ -28,9 +28,7 @@ class NatureBasedAlgorithm:
         d = np.random.uniform(self.days[0], self.days[1], size=self.days[2])
         a = np.random.uniform(self.alphas[0], self.alphas[1], size=self.alphas[2])
         self.pos = np.concatenate((w, d, a))
-        print(self.pos)
-        print(self.data.head())       
-    #    self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
     
     def change_position(self, new_pos):
         self.pos = new_pos
