@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-import NatureBasedAlgorithm
+from abc import ABC
+from NatureBasedAlgorithm import NatureBasedAlgorithm
 import numpy as np
 import pandas as pd
 import data_reader as dr
@@ -10,7 +10,6 @@ class hawk(NatureBasedAlgorithm):
         super().__init__(name="Hawk", description="Harris Hawks Optimization",
                          scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
                          start=start, end=end, data=data)
-    
     def change_pos(self, new_pos):
         new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)       # weights
         new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)       # days
@@ -76,9 +75,12 @@ class hawk(NatureBasedAlgorithm):
 
 # === RUN SECTION ===
 
+# Define parameters
+
 models = dr.Train("01/01/2023", "30/07/2023", "01/08/2023", "30/12/2023", step_size=60*100)
-models.train_model(HHO, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=20, constant=1)
-models.compare_models()
+alg: NatureBasedAlgorithm = hawk(models.score, [1, 100, 6], [0.1, 1, 6], [0.1, 1, 2], max_iter=10, num_pop=20, constant=1)
+#models.train_model(NatureBasedAlgorithm,  num_agents=20, num_iterations=10)
+#models.compare_models()
 
 #10 whales, 10 iterations = -$3.768671154374033 profit over baseline
 #20 whales, 10 iterations = -$83.41078505604878 profit over baseline

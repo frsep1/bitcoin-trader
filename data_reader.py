@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import time
 import datetime
+import NatureBasedAlgorithm
 
 
 class HistoricData:
@@ -151,23 +152,42 @@ class Train:
         bal.sell(end_price)
         return bal.get_balance()
 
-    def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1):
-        best, error = model(
-            self.score, days, weights, alphas, num_pop, max_iter,
-            self.step_size, self.train_start, self.train_end,
-            self.train_data, constant=constant
+    def train_model(self, model: NatureBasedAlgorithm, num_agents, num_iterations):
+        best = model.optimise(num_agents, num_iterations, constant=1)
+        self.models[model.name] = best
+        return self.score(
+            self.models[model.name][:6],
+            self.models[model.name][6:12],
+            self.models[model.name][12:14],
+            self.train_start, self.train_end, self.train_data
         )
-        self.models[model] = best
-        return error
+    
+    #def train_model(self, model, days, weights, alphas, max_iter=1000, num_pop=10, constant=1):
+    #    best, error = model(
+    #        self.score, days, weights, alphas, num_pop, max_iter,
+    #        self.step_size, self.train_start, self.train_end,
+    #        self.train_data, constant=constant
+    #    )
+    #    self.models[model] = best
+    #    return error
 
-    def test_model(self, model):
+    def test_model(self, model:NatureBasedAlgorithm):
         result = self.score(
-            self.models[model][:6],
-            self.models[model][6:12],
-            self.models[model][12:14],
+            self.models[model.name][:6],
+            self.models[model.name][6:12],
+            self.models[model.name][12:14],
             self.test_start, self.test_end, self.test_data
         )
         return result
+
+    #def test_model(self, model):
+    #    result = self.score(
+    #        self.models[model][:6],
+    #        self.models[model][6:12],
+    #        self.models[model][12:14],
+    #        self.test_start, self.test_end, self.test_data
+    #    )
+    #    return result
 
     def compare_models(self):
         baseline = self.baseline_score()
