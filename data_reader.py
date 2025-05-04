@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import time
 import datetime
+from copy import deepcopy
 import NatureBasedAlgorithm
 
 
@@ -164,6 +165,12 @@ class Train:
                                       model.best_pos[12:14],
                                       self.train_start, self.train_end, self.train_data)
         
+        print('After Training:')
+        print(f"Model: {model.name}, Score: {model.best_score}")
+        print(f"Weights: {model.best_pos[0:6]}")
+        print(f"Days: {model.best_pos[6:12]}")
+        print(f"Alphas: {model.best_pos[12:14]}\n")
+        
         self.models[model.name] = model
         
         return model.best_score
@@ -178,13 +185,13 @@ class Train:
     #    return error
 
     def test_model(self, model: NatureBasedAlgorithm):
-        result = self.score(
-            self.models[model.name][:6],
-            self.models[model.name][6:12],
-            self.models[model.name][12:14],
+        model.best_score = self.score(
+            model.best_pos[0:6],
+            model.best_pos[6:12],
+            model.best_pos[12:14],
             self.test_start, self.test_end, self.test_data
         )
-        return result
+        return model.best_score
 
     #def test_model(self, model):
     #    result = self.score(
@@ -200,16 +207,17 @@ class Train:
         print(f"Baseline score: {baseline}\n")
         results = {}
         
-        print(f"{self.models}")
-        
-        for model in self.models:
-            print(model)
-            #results[model] = self.test_model(model.name)
-            #print(f"Model: {model}, Score: {results[model]}")
-            #print(f"Weights: {self.models[model][0:6]}")
-            #print(f"Days: {self.models[model][6:12]}")
-            #print(f"Alphas: {self.models[model][12:14]}\n")
-            #print([results[model], self.models[model][12:14]])
-        #best_model = max(results, key=results.get)
-        #print(f"Best model: {best_model}, Score: {results[best_model]}")
-        #print(f"Profit over baseline: {results[best_model] - baseline}")
+        for model_used in self.models:
+            print(model_used)
+            train_model: NatureBasedAlgorithm  = self.models[model_used]
+            test_model: NatureBasedAlgorithm = deepcopy(train_model)
+            
+            results[model_used] = self.test_model(test_model)
+            print(f"Model: {model_used}, Score: {results[model_used]}")
+            print(f"Weights: {test_model.best_pos[0:6]}")
+            print(f"Days: {test_model.best_pos[6:12]}")
+            print(f"Alphas: {test_model.best_pos[12:14]}\n")
+            print([results[model_used], test_model.best_pos[12:14]])
+        best_model = max(results, key=results.get)
+        print(f"Best model: {best_model}, Score: {results[best_model]}")
+        print(f"Profit over baseline: {results[best_model] - baseline}")

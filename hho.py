@@ -70,8 +70,6 @@ class hawk(NatureBasedAlgorithm):
                     best_score = h.score
                     best_pos = h.pos
 
-        print('best position:')
-        print(best_pos)
         return best_pos
 
 
