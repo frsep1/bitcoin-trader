@@ -7,7 +7,7 @@ import NatureBasedAlgorithm
 
 
 class HistoricData:
-    def __init__(self, start, end, buffer_days=0):
+    def __init__(self, start, end, step_size, buffer_days=0, ):
         dtype = {
             'unix': np.int64,
             'open': np.float64,
@@ -20,20 +20,26 @@ class HistoricData:
             'symbol': 'str'
         }
 
-        self.df = pd.read_csv('BTC-Daily.csv', dtype=dtype)
+        self.step_size = step_size
+        # doing minute data requires too many changes so will not allow it to be done
+        if self.step_size < 60:
+            raise ValueError("Step Size must be above 60")
+        # allow a range for testing and faster/slower run time
+        elif self.step_size < 86400:
+            print("hourly")
+            self.df = pd.read_csv('BTC-Hourly.csv', dtype=dtype)
+        # going to default to daily data
+        else:
+            print("daily")
+            self.df = pd.read_csv('BTC-Daily.csv', dtype=dtype)
+
         self.df = self.df.drop(columns=['Volume BTC', 'Volume USD', 'symbol', 'date'])
 
         # Include a buffer period to allow back-calculating WMAs
-        buffer_start = start - buffer_days * 86400
-
+        buffer_start = start - buffer_days * self.step_size
         self.df = self.df[(self.df['unix'] >= buffer_start) & (self.df['unix'] <= end)]
-
-
         self.df = self.df.set_index('unix')
-
-        # doesn't work without this because of the excel order
         self.df = self.df.sort_index()
-
 
     def SMA(self, n):
         return np.ones(n) / n
@@ -56,11 +62,11 @@ class HistoricData:
     # Calculates the WMA and checks to see if padding is required
     def current_WMA(self, n, kernel, timestamp):
         # Gets data points from time t - n_days to time t
-        p = self.df.loc[timestamp - n * 86400:timestamp]['close'].values
+        p = self.df.loc[timestamp - n * self.step_size:timestamp]['close'].values
         # Check if we have enough data points; pad if necessary
         if len(p) < n:
             # Gets t to t + n_days datapoints
-            p = self.df.loc[timestamp:timestamp + n * 86400]['close'].values
+            p = self.df.loc[timestamp:timestamp + n * self.step_size]['close'].values
             # Creates new padded data points
             p = self.pad(p, n)
 
@@ -95,13 +101,12 @@ class Train:
         self.train_end = self.to_unix(train_end)
         self.test_start = self.to_unix(test_start)
         self.test_end = self.to_unix(test_end)
-        self.train_data = HistoricData(self.train_start, self.train_end, buffer_days=0)
-        self.test_data = HistoricData(self.test_start, self.test_end, buffer_days=0)
-        self.models = {}
         self.step_size = step_size
+        self.train_data = HistoricData(self.train_start, self.train_end,self.step_size,  buffer_days=0, )
+        self.test_data = HistoricData(self.test_start, self.test_end,self.step_size, buffer_days=0, )
+        self.models = {}
 
     def to_unix(self, date_str):
-
         dt = datetime.datetime.strptime(date_str, "%d/%m/%Y")
         dt = dt + datetime.timedelta(hours=8)
         return int(time.mktime(dt.timetuple()))
@@ -111,7 +116,7 @@ class Train:
         alphas = [min(1, max(0, a)) for a in alphas]
         
         max_days_needed = max(days)
-        if end - start < max_days_needed * 86400:
+        if end - start < max_days_needed * self.step_size:
             raise ValueError("Training/test window is too short for chosen WMA window sizes.")
         current_time = start # + 30 * 86400
         balance = Balance()
@@ -151,6 +156,7 @@ class Train:
     def baseline_score(self):
         start_price = self.test_data.current_price(self.test_start)
         end_price = self.test_data.current_price(self.test_end)
+        # print("Start and end price is:" + str(start_price), str(end_price), self.test_start, self.test_end)
         bal = Balance()
         bal.buy(start_price)
         bal.sell(end_price)

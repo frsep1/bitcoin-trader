@@ -11,9 +11,15 @@ class whale(NatureBasedAlgorithm):
                          start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
-        super().change_pos(new_pos)
+        # super().change_pos(new_pos)
+        new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)  # weights
+        new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)  # days
+        new_pos[12:14] = np.clip(new_pos[12:14], 0.0, 1.0)  # alphas
+        # === ================= ===
+        self.pos = new_pos
+        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
     
-    def optimize(self, num_agents, iterations, constant=1):
+    def optimise(self, num_agents, iterations, constant=1):
         whales = [whale(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
         best_pos = np.zeros(14)
         best_score = 0
@@ -58,14 +64,14 @@ class whale(NatureBasedAlgorithm):
 days = [1, 100, 6]     # [min_value, max_value, number_of_values]
 weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
 alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
-step_size = 60*100     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
+step_size = 86400    # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
 
 models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
 
 alg: NatureBasedAlgorithm = whale(models.score, days, weights, alphas, step_size,
                                   models.train_start, models.train_end, models.train_data)
 
-models.train_model(alg,  num_agents=20, num_iterations=10)
+models.train_model(alg,  num_agents=10, num_iterations=10)
 models.compare_models()
 
 #10 whales, 10 iterations = $6.369556456832015 profit over baseline
