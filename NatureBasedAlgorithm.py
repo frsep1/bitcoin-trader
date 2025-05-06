@@ -21,24 +21,29 @@ class NatureBasedAlgorithm:
         self.scoring = scoring
         self.pos = None
         self.score = None
-        self.initial_position()
         self.lower_bound, self.upper_bound = self.clip_bounds()
+        self.initial_position()
         
         self.best_pos = None
         self.best_score = None
+        self.scores_over_time = []
         
     def initial_position(self):
         """Initialize the position based on weights, days, and alphas."""
-        w = np.random.uniform(self.weights[0], self.weights[1], size=self.weights[2])
-        d = np.random.uniform(self.days[0], self.days[1], size=self.days[2])
-        a = np.random.uniform(self.alphas[0], self.alphas[1], size=self.alphas[2])
-        self.pos = np.concatenate((w, d, a))
-        if len(self.pos) == 6:
+        total_params = self.weights[2] + self.days[2] + self.alphas[2]
+        if total_params == 6:
+            d = np.random.uniform(self.lower_bound[:3], self.upper_bound[:3], size=self.days[2])
+            a = np.random.uniform(self.lower_bound[3:], self.upper_bound[3:], size=self.alphas[2])
             self.pos = np.concatenate((d, a))
             self.score = self.scoring(self.data, MACD, self.pos)
         else:
+            w = np.random.uniform(self.lower_bound[:6], self.upper_bound[:6], size=self.days[2])
+            d = np.random.uniform(self.lower_bound[6:12], self.upper_bound[6:12], size=self.days[2])
+            a = np.random.uniform(self.lower_bound[12:14], self.upper_bound[12:14], size=self.alphas[2])
+            self.pos = np.concatenate((w, d, a))
             self.score = self.scoring(self.data, original, self.pos)
-    
+
+
     def change_pos(self, new_pos):
         # this avoids it going out of the boundaries
         new_pos = np.clip(new_pos, self.lower_bound, self.upper_bound)
@@ -61,7 +66,10 @@ class NatureBasedAlgorithm:
         for i in range(self.alphas[2]):
             lower_bound.append(self.alphas[0])
             upper_bound.append(self.alphas[1])
-
+        
+        if len(lower_bound) == 14:
+            lower_bound[6:12] = [5,5,5,15,15,15]
+            upper_bound[6:12] = [15,15,15,40,40,40]
         lower_bound = np.array(lower_bound)
         upper_bound = np.array(upper_bound)
         return lower_bound, upper_bound

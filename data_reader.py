@@ -116,6 +116,7 @@ class Train:
         my_balance = Balance()
         last_signal = "sell"
         highs, lows = equation({'weights':weights, 'days':days, 'alphas':alphas}, data)
+        num_trades = 0
 
         for i, t in enumerate(data.df.index):      
 
@@ -123,13 +124,19 @@ class Train:
                 if last_signal == "sell":
                     my_balance.buy(data.current_price(t))
                     last_signal = "buy"
+                    num_trades += 1
             elif highs[i] < lows[i]:
                 if last_signal == "buy":
                     my_balance.sell(data.current_price(t))
                     last_signal = "sell"
+                    num_trades += 1
 
         if last_signal == "buy":
             my_balance.sell(data.current_price(data.df.index[-1]))
+
+        if len(data.df.index) > 1000 and num_trades < 50:
+
+            my_balance.fiat -= (10-num_trades)*100
         return my_balance.get_balance()
 
     # returns score if we were to just buy at the start and sell at the end

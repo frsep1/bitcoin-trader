@@ -3,12 +3,17 @@ import matplotlib.dates as mdates
 from datetime import datetime
 import data_reader as dr
 from equations import original, MACD
+import os
 
 class Plotter:
-    def __init__(self, data, models):
+    def __init__(self, data, models, num_agents):
         self.data = data
         self.models = models
+        self.num_agents = num_agents
         self.plot_data = {}
+        self.plot_dir = "./figures"
+        if not os.path.exists(self.plot_dir):
+            os.makedirs(self.plot_dir)
 
     def get_plotting_data(self):
         timestamps = self.data.df.index  # start after buffer
@@ -16,6 +21,7 @@ class Plotter:
         self.prices = [self.data.current_price(t) for t in timestamps]
         
         for model in self.models:
+            self.iterations = len(self.models[model].scores_over_time)
             balance = dr.Balance()
             balance_line = []
             buy_signals = []
@@ -64,7 +70,7 @@ class Plotter:
 
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
-        ax.set_title(f"{model} {self.equation} Signals Plot")
+        ax.set_title(f"{model}, {self.iterations} Iterations, {self.num_agents} Agents, {self.equation} Equation - Signals Plot")
 
         # Show only 10 x-axis ticks (or fewer if the dataset is small)
         step = max(1, len(self.times) // 10)
@@ -77,7 +83,7 @@ class Plotter:
         ax.legend()
         ax.grid(True)
         fig.tight_layout()
-        plt.show()
+        plt.savefig(os.path.join(self.plot_dir, f"{model}_{self.iterations}_{self.num_agents}_{self.equation}_Signals_Plot.png"))
 
     def plot_buy_sell(self, model):
         model_data = self.plot_data[model]
@@ -88,15 +94,15 @@ class Plotter:
         ax1.plot(self.times, model_data['highs'], label='High', color='orange')
         ax1.plot(self.times, model_data['lows'], label='Low', color='deepskyblue')
         ax1.set_xlabel("Date")
-        ax1.set_ylabel("Price", color='black')
+        ax1.set_ylabel("Price (USD)", color='black')
         ax1.tick_params(axis='y', labelcolor='black')
-        ax1.set_title(f"{model} {self.equation} Buy/Sell Signal Plot")
+        ax1.set_title(f"{model}, {self.iterations} Iterations, {self.num_agents} Agents, {self.equation} Equation - Buy/Sell Signal Plot")
 
         # Secondary y-axis for difference signal
         ax2 = ax1.twinx()
         # Markers for buy/sell
-        ax1.scatter([t for t, p in self.plot_data[model]['buy_signals']], [0 for t, p in self.plot_data[model]['buy_signals']], marker='^', color='green', label='buy')
-        ax1.scatter([t for t, p in self.plot_data[model]['sell_signals']], [0 for t, p in self.plot_data[model]['sell_signals']], marker='v', color='red', label='sell')
+        ax1.scatter([t for t, p in self.plot_data[model]['buy_signals']], [p for t, p in self.plot_data[model]['buy_signals']], marker='^', color='green', label='buy')
+        ax1.scatter([t for t, p in self.plot_data[model]['sell_signals']], [p for t, p in self.plot_data[model]['sell_signals']], marker='v', color='red', label='sell')
         diff = [h - l for h, l in zip(model_data['highs'], model_data['lows'])]
         ax2.plot(self.times, diff, label='High-Low', color='gray', linestyle='dotted')
         ax2.set_ylabel("Signal Difference", color='gray')
@@ -117,7 +123,7 @@ class Plotter:
         fig.tight_layout()
         plt.xticks(rotation=45)
         plt.grid(True)
-        plt.show()
+        plt.savefig(os.path.join(self.plot_dir, f"{model}_{self.iterations}_{self.num_agents}_{self.equation}_BuySell_Signal_Plot.png"))
 
     def plot_profit(self):
         baseline = []
@@ -130,7 +136,7 @@ class Plotter:
             ax.plot(self.times, self.plot_data[model]['balance_line'], label=f"{model} {round(self.plot_data[model]['balance_line'][-1],2)}", linewidth=1.5)
         ax.set_xlabel("Date")
         ax.set_ylabel("Balance (USD)")
-        ax.set_title(f"Algorithms Balances Over Time with {self.equation}")
+        ax.set_title(f"{model}, {self.iterations} Iterations, {self.num_agents} Agents, {self.equation} Equation - Algorithms Balances Over Time")
 
         # Show only 10 x-axis ticks
         step = max(1, len(self.times) // 10)
@@ -143,4 +149,12 @@ class Plotter:
         ax.legend()
         ax.grid(True)
         fig.tight_layout()
-        plt.show()
+        plt.savefig(os.path.join(self.plot_dir, f"{self.iterations}_{self.num_agents}_{self.equation}_balance_over_time.png"))
+    
+    def plot_scores_ot(self):
+        for model in self.models:
+            plt.plot(self.models[model].scores_over_time, label=model)
+        plt.xlabel("Iteration")
+        plt.ylabel("Score (USD)")
+        plt.legend()
+        plt.savefig(os.path.join(self.plot_dir, f"{self.iterations}_{self.num_agents}_{self.equation}_convergence_over_time.png"))

@@ -70,7 +70,7 @@ class hawk(NatureBasedAlgorithm):
                 if h.score > best_score:
                     best_score = h.score
                     best_pos = h.pos
-
+            self.scores_over_time.append(best_score)
         return best_pos
 
 

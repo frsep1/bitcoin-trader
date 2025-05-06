@@ -38,6 +38,7 @@ class SCA(NatureBasedAlgorithm):
                 if points[j].score > best_score:
                     best_score = points[j].score
                     best_pos = points[j].pos
+            self.scores_over_time.append(best_score)
         return best_pos
 
 

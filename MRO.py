@@ -76,7 +76,7 @@ class MRFO(NatureBasedAlgorithm):
                 if p.score > best_fitness:
                     best_fitness = p.score
                     best_solution = p.pos.copy()
-
+            self.scores_over_time.append(best_fitness)
 
         return best_solution
 

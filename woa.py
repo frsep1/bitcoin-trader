@@ -50,6 +50,7 @@ class whale(NatureBasedAlgorithm):
                 if whales[j].score > best_score:
                     best_score = whales[j].score
                     best_pos = whales[j].pos
+            self.scores_over_time.append(best_score)
         return best_pos
 
 
