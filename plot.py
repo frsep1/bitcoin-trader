@@ -20,32 +20,38 @@ class Plotter:
             balance_line = []
             buy_signals = []
             sell_signals = []            
-            if len(self.models[model]) == 14:
-                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model][6:12]]
-                highs, lows = original({'weights':self.models[model][:6], "days":days, "alphas":self.models[model][12:14]}, self.data)
+            if len(self.models[model].best_pos) == 14:
+                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model].best_pos[6:12]]
+                highs, lows = original({'weights':self.models[model].best_pos[:6], "days":days, "alphas":self.models[model].best_pos[12:14]}, self.data)
+                self.equation = "Original"
             else:
-                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model][:3]]
-                highs, lows = MACD({'days':self.models[model][:3], "alphas":self.models[model][3:]}, self.data)
+                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model].best_pos[:3]]
+                highs, lows = MACD({'days':days, "alphas":self.models[model].best_pos[3:]}, self.data)
+                self.equation = "MACD"
 
             last_signal = "sell"
             for i, t in enumerate(timestamps):
 
-                if highs[i] < lows[i]:
-                    if last_signal == "buy":
-                        balance.sell(self.prices[i])
-                        sell_signals.append((self.times[i], self.prices[i]))
-                        last_signal = "sell"
-
-                elif highs[i] > lows[i]:
+                if highs[i] > lows[i]:
                     if last_signal == "sell":
+                        # High freq has crossed over low freq indicating upward trend
+                        # Want to buy bitcoin
                         balance.buy(self.prices[i])
                         buy_signals.append((self.times[i], self.prices[i]))
                         last_signal = "buy"
 
-                if balance.get_my_balance() == 0:
-                    balance_line.append((balance.my_balance * self.data.current_price(t))*0.97)
+                elif highs[i] < lows[i]:
+                    if last_signal == "buy":
+                        # High freq has cross over low frew indicating downward trend
+                        # Want to sell bitcoin
+                        balance.sell(self.prices[i])
+                        sell_signals.append((self.times[i], self.prices[i]))
+                        last_signal = "sell"
+
+                if balance.get_balance() == 0:
+                    balance_line.append((balance.btc * self.data.current_price(t))*0.97)
                 else:
-                    balance_line.append(balance.get_my_balance())
+                    balance_line.append(balance.get_balance())
 
             self.plot_data[model] = {"highs":highs, "lows":lows, "balance_line":balance_line, "balance":balance, 'buy_signals':buy_signals, 'sell_signals':sell_signals}
  
@@ -58,7 +64,7 @@ class Plotter:
 
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
-        ax.set_title(f"{model} Signals Plot")
+        ax.set_title(f"{model} {self.equation} Signals Plot")
 
         # Show only 10 x-axis ticks (or fewer if the dataset is small)
         step = max(1, len(self.times) // 10)
@@ -84,14 +90,13 @@ class Plotter:
         ax1.set_xlabel("Date")
         ax1.set_ylabel("Price", color='black')
         ax1.tick_params(axis='y', labelcolor='black')
-        ax1.set_title(f"{model} Buy/Sell Signal Plot")
-
-        # Markers for buy/sell
-        ax1.scatter([t for t, p in self.plot_data[model]['buy_signals']], [p for t, p in self.plot_data[model]['buy_signals']], marker='^', color='green', label='buy')
-        ax1.scatter([t for t, p in self.plot_data[model]['sell_signals']], [p for t, p in self.plot_data[model]['sell_signals']], marker='v', color='red', label='sell')
+        ax1.set_title(f"{model} {self.equation} Buy/Sell Signal Plot")
 
         # Secondary y-axis for difference signal
         ax2 = ax1.twinx()
+        # Markers for buy/sell
+        ax1.scatter([t for t, p in self.plot_data[model]['buy_signals']], [0 for t, p in self.plot_data[model]['buy_signals']], marker='^', color='green', label='buy')
+        ax1.scatter([t for t, p in self.plot_data[model]['sell_signals']], [0 for t, p in self.plot_data[model]['sell_signals']], marker='v', color='red', label='sell')
         diff = [h - l for h, l in zip(model_data['highs'], model_data['lows'])]
         ax2.plot(self.times, diff, label='High-Low', color='gray', linestyle='dotted')
         ax2.set_ylabel("Signal Difference", color='gray')
@@ -125,7 +130,7 @@ class Plotter:
             ax.plot(self.times, self.plot_data[model]['balance_line'], label=f"{model} {round(self.plot_data[model]['balance_line'][-1],2)}", linewidth=1.5)
         ax.set_xlabel("Date")
         ax.set_ylabel("Balance (USD)")
-        ax.set_title("Balances Over Time")
+        ax.set_title(f"Algorithms Balances Over Time with {self.equation}")
 
         # Show only 10 x-axis ticks
         step = max(1, len(self.times) // 10)

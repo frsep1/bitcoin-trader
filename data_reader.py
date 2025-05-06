@@ -27,11 +27,11 @@ class HistoricData:
             raise ValueError("Step Size must be above 60")
         # allow a range for testing and faster/slower run time
         elif self.step_size < 86400:
-            print("hourly")
+            #print("hourly")
             self.df = pd.read_csv('BTC-Hourly.csv', dtype=dtype)
         # going to default to daily data
         else:
-            print("daily")
+            #print("daily")
             self.df = pd.read_csv('BTC-Daily.csv', dtype=dtype)
 
         self.df = self.df.drop(columns=['Volume BTC', 'Volume USD', 'symbol', 'date'])
@@ -73,7 +73,7 @@ class Balance():
         self.fiat = initial_balance
         self.btc = 0
 
-    def get_my_balance(self):
+    def get_balance(self):
         return self.fiat
 
     def buy(self, price):
@@ -103,7 +103,11 @@ class Train:
         dt = dt + datetime.timedelta(hours=8)
         return int(time.mktime(dt.timetuple()))
 
-    def score(self, data, equation, weights=[], days=[], alphas=[]):
+    def score(self, data, equation, params):
+        if len(params)==14:
+            weights, days, alphas = params[0:6], params[6:12], params[12:14]
+        else:
+            days, alphas, weights = params[:3], params[3:], []
         # Making days integers and positive
         days = [min(30, max(1, abs(int(round(d))))) for d in days]
         # Making alphas floats and between 0 and 1
@@ -126,7 +130,7 @@ class Train:
 
         if last_signal == "buy":
             my_balance.sell(data.current_price(data.df.index[-1]))
-        return my_balance.get_my_balance()
+        return my_balance.get_balance()
 
     # returns score if we were to just buy at the start and sell at the end
     def baseline_score(self):
@@ -142,38 +146,31 @@ class Train:
     # the value returned should be in the form [weight1, ..., weightsn, day1, ..., dayn, alpha1, ..., alphan]
     def train_model(self, model: NatureBasedAlgorithm, num_agents, num_iterations):
         model.best_pos = model.optimise(num_agents, num_iterations, constant=1)
-        if len(self.models[model]) == 14:
-            model.best_score = self.score(self.test_data,
+        if len(model.best_pos) == 14:
+            model.best_score = self.score(self.train_data,
                                           original,
-                                          weights = model.best_pos[0:6],
-                                          days = model.best_pos[6:12],
-                                          alphas = model.best_pos[12:14])
+                                          params = model.best_pos)
         else:
-            model.best_score = self.score(
-                self.train_data,
-                MACD,
-                days = self.models[model][:3],
-                alphas = self.models[model][3:])
+            model.best_score = self.score(self.train_data,
+                                          MACD,
+                                          params = model.best_pos)
         print(f"Training model: {model.name}, Training Score: {model.best_score}")
         self.models[model.name] = model
 
         return model.best_score
 
     def test_model(self, model):
-        if len(self.models[model]) == 14:
+        if len(model.best_pos) == 14:
             return self.score(
                 self.test_data,
                 original,
-                weights = self.models[model][:6],
-                days = self.models[model][6:12],
-                alphas = self.models[model][12:14]
+                params = model.best_pos
             )
         else:
             return self.score(
                 self.test_data,
                 MACD,
-                days = self.models[model][:3],
-                alphas = self.models[model][3:]
+                params = model.best_pos
             )
 
     # compares all the models in the models dict
@@ -191,12 +188,14 @@ class Train:
             if len(test_model.best_pos) == 14:
                 print("Equation: Original")
                 print(f"Weights: {np.array2string(test_model.best_pos[0:6], precision=4, floatmode='fixed')}")
+                print(f"Days: {np.array2string(test_model.best_pos[6:12], precision=0, floatmode='fixed')}") # fixed the order so it matches what is put into train_models
+                print(f"Alphas: {np.array2string(test_model.best_pos[12:14], precision=4, floatmode='fixed')}\n")
             else:
                 print("Equation: MACD")
-            print(f"Days: {np.array2string(test_model.best_pos[6:12], precision=0, floatmode='fixed')}") # fixed the order so it matches what is put into train_models
-            print(f"Alphas: {np.array2string(test_model.best_pos[12:14], precision=4, floatmode='fixed')}\n")
+                print(f"Days: {np.array2string(test_model.best_pos[:3], precision=0, floatmode='fixed')}") # fixed the order so it matches what is put into train_models
+                print(f"Alphas: {np.array2string(test_model.best_pos[3:], precision=4, floatmode='fixed')}\n")
 
-        print(f"{"BEST MODEL":-14}")
+        print(f"---------------------------- BEST MODEL ----------------------------")
         print(f"Baseline score: {baseline:.2f}\n")
         print(f"Best model: {max(results, key=results.get)}, Score: {max(results.values())}")
         print(f"Model made {max(results.values()) - baseline} profit over baseline")

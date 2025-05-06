@@ -35,18 +35,18 @@ class NatureBasedAlgorithm:
         self.pos = np.concatenate((w, d, a))
         if len(self.pos) == 6:
             self.pos = np.concatenate((d, a))
-            self.score = self.scoring(self.data, MACD, days=self.pos[:3], alphas=self.pos[3:])
+            self.score = self.scoring(self.data, MACD, self.pos)
         else:
-            self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
+            self.score = self.scoring(self.data, original, self.pos)
     
     def change_pos(self, new_pos):
         # this avoids it going out of the boundaries
         new_pos = np.clip(new_pos, self.lower_bound, self.upper_bound)
         self.pos = new_pos
         if len(self.pos) == 6:
-            self.score = self.scoring(self.data, MACD, days=self.pos[:3], alphas=self.pos[3:])
+            self.score = self.scoring(self.data, MACD, self.pos)
         else:
-            self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
+            self.score = self.scoring(self.data, original, self.pos)
 
     def clip_bounds(self):
         lower_bound = []
