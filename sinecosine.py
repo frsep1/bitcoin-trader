@@ -5,9 +5,10 @@ import data_reader as dr
 from NatureBasedAlgorithm import NatureBasedAlgorithm
 
 class SCA(NatureBasedAlgorithm):
-    def __init__(self, scoring, days, weights, alphas, data):
+    def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
         super().__init__(name="SineCosine", description="Sine Cosine Optimization",
-                         scoring=scoring, days=days, weights=weights, alphas=alphas, data=data)
+                         scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
+                         start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
         # super().change_pos(new_pos)?
@@ -19,7 +20,7 @@ class SCA(NatureBasedAlgorithm):
         self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
     
     def optimise(self, num_agents, iterations, constant=1):
-        points = [point(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
+        points = [SCA(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
         best_pos = np.zeros(14)
         best_score = 0
         a = constant

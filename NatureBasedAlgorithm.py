@@ -5,11 +5,14 @@ import data_reader as dr
 from equations import MACD, original
 
 class NatureBasedAlgorithm:
-    def __init__(self, name, description, scoring, days, weights, alphas, data):
+    def __init__(self, name, description, scoring, days, weights, alphas, intervals, start, end, data):
         self.name = name
         self.description = description
         
+        self.start = start
+        self.end = end
         self.data = data
+        self.intervals = intervals
 
         self.days = days
         self.weights = weights
@@ -43,7 +46,7 @@ class NatureBasedAlgorithm:
             self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
     
     @abstractmethod
-    def optimize(self, num_agents, num_iterations, constant=1):
+    def optimise(self, num_agents, num_iterations, constant=1):
         """Abstract method for the optimization process."""
         pass
     

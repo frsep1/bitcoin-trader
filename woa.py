@@ -6,9 +6,10 @@ from NatureBasedAlgorithm import NatureBasedAlgorithm
 from equations import MACD, original
 
 class whale(NatureBasedAlgorithm):
-    def __init__(self, scoring, days, weights, alphas, data):
+    def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
         super().__init__(name="Whale", description="Whale Optimization",
-                         scoring=scoring, days=days, weights=weights, alphas=alphas, data=data)
+                         scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
+                         start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
         # super().change_pos(new_pos)

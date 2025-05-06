@@ -50,13 +50,13 @@ class HistoricData:
         return np.ones(n) / n
 
     def EMA(self, n, alpha):
-        return np.flip(np.array([alpha * (1 - alpha) ** i for i in range(n)]))
+        return np.array([alpha * (1 - alpha) ** i for i in range(n)])
 
     def LMA(self, n):
         return np.array((2 / (n + 1)) * (1 - np.arange(n) / n))
 
     def WMA(self, p, n, kernel):
-        return np.convolve(self.pad(p, n), kernel, mode='valid')
+        return np.convolve(self.pad(p, n), np.flip(kernel), mode='valid')
 
     def current_price(self, time):
         return self.df.loc[time]['close']
@@ -70,23 +70,23 @@ class HistoricData:
 
 class Balance():
     def __init__(self, balance=1000):
-        self.my_balance = balance
-        self.bitcoin = 0
+        self.fiat = balance
+        self.btc = 0
 
     def get_my_balance(self):
-        return self.my_balance
+        return self.fiat
 
     def buy(self, price):
-        bitcoins = (self.my_balance / price) * 0.97
-        self.bitcoin += bitcoins
-        self.my_balance = 0
+        bitcoins = (self.fiat / price) * 0.97
+        self.btc += bitcoins
+        self.fiat = 0
 
     def sell(self, price):
-        self.my_balance += (self.bitcoin * price) * 0.97
-        self.bitcoin = 0
+        self.fiat += (self.btc * price) * 0.97
+        self.btc = 0
 
 
-class Train():
+class Train:
     def __init__(self, train_start, train_end, test_start, test_end, step_size=86400):
         self.train_start = self.to_unix(train_start)
         self.train_end = self.to_unix(train_end)
