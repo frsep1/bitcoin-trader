@@ -15,36 +15,14 @@ class MRFO(NatureBasedAlgorithm):
                          start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
-        new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)  # weights
-        new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)  # days
-        new_pos[12:14] = np.clip(new_pos[12:14], 0.0, 1.0)  # alphas
-        # === ================= ===
-        self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        super().change_pos(new_pos)
 
     def optimise(self, num_agents, iterations, constant=1):
         #S is the somersault factor that decides the somersault range of manta rays and 𝑆 = 2, 𝑟2 and 𝑟3 are two random numbers in [0, 1]    
         somersault = 2
         
         # make sure it is weights, days, alpha pattern. Tried to change a few of these parameters but didn't do much
-        lower_bound = []
-        upper_bound = []
-        
-        points = [MRFO(self.scoring, self.days, self.weights, self.alphas, self.data) for _ in range(num_agents)]
-
-        for i in range(self.weights[2]):
-            lower_bound.append(self.weights[0])
-            upper_bound.append(self.weights[1])
-        for i in range(self.days[2]):
-            lower_bound.append(self.days[0])
-            upper_bound.append(self.days[1])
-        for i in range(self.alphas[2]):
-            lower_bound.append(self.alphas[0])
-            upper_bound.append(self.alphas[1])
-
-        lower_bound = np.array(lower_bound)
-        upper_bound = np.array(upper_bound)
-        points = [MRFO(self.scoring, self.days, self.weights,self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]
+        points = [MRFO(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]
         
         best_fitness = float("-inf")
 
@@ -91,9 +69,6 @@ class MRFO(NatureBasedAlgorithm):
                 rand4 = np.random.rand()
                 somersault_move = somersault * (rand3 * current_best - rand4 * current)
                 new_position += somersault_move
-                
-                # this avoids it going out of the boundaries
-                new_position = np.clip(new_position, lower_bound, upper_bound)
 
                 points[i].change_pos(new_position)
 

@@ -69,8 +69,8 @@ class HistoricData:
 
 
 class Balance():
-    def __init__(self, balance=1000):
-        self.fiat = balance
+    def __init__(self, initial_balance=1000):
+        self.fiat = initial_balance
         self.btc = 0
 
     def get_my_balance(self):

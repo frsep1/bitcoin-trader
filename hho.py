@@ -11,12 +11,7 @@ class hawk(NatureBasedAlgorithm):
                          start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
-        new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)       # weights
-        new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)       # days
-        new_pos[12:14] = np.clip(new_pos[12:14], 0.0, 1.0)   # alphas
-        # === ================= ===
-        self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        super().change_pos(new_pos)
 
     def optimise(self, num_agents, iterations, constant=1):
         hawks = [hawk(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]

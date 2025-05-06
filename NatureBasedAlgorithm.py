@@ -22,6 +22,7 @@ class NatureBasedAlgorithm:
         self.pos = None
         self.score = None
         self.initial_position()
+        self.lower_bound, self.upper_bound = self.clip_bounds()
         
         self.best_pos = None
         self.best_score = None
@@ -39,11 +40,32 @@ class NatureBasedAlgorithm:
             self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
     
     def change_pos(self, new_pos):
+        # this avoids it going out of the boundaries
+        new_pos = np.clip(new_pos, self.lower_bound, self.upper_bound)
         self.pos = new_pos
         if len(self.pos) == 6:
             self.score = self.scoring(self.data, MACD, days=self.pos[:3], alphas=self.pos[3:])
         else:
             self.score = self.scoring(self.data, original, self.pos[0:6], self.pos[6:12], self.pos[12:14])
+
+    def clip_bounds(self):
+        lower_bound = []
+        upper_bound = []
+        
+        for i in range(self.weights[2]):
+            lower_bound.append(self.weights[0])
+            upper_bound.append(self.weights[1])
+        for i in range(self.days[2]):
+            lower_bound.append(self.days[0])
+            upper_bound.append(self.days[1])
+        for i in range(self.alphas[2]):
+            lower_bound.append(self.alphas[0])
+            upper_bound.append(self.alphas[1])
+
+        lower_bound = np.array(lower_bound)
+        upper_bound = np.array(upper_bound)
+        return lower_bound, upper_bound
+
     
     @abstractmethod
     def optimise(self, num_agents, num_iterations, constant=1):
