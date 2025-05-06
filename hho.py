@@ -18,7 +18,7 @@ class hawk(NatureBasedAlgorithm):
         self.pos = new_pos
         self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
 
-    def optimize(self, num_agents, iterations, constant=1):
+    def optimise(self, num_agents, iterations, constant=1):
         hawks = [hawk(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]
         best_pos = np.zeros(14)
         best_score = float('-inf')
@@ -85,7 +85,6 @@ models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_s
 
 alg: NatureBasedAlgorithm = hawk(models.score, days, weights, alphas, step_size,
                                  models.train_start, models.train_end, models.train_data)
-
 
 models.train_model(alg,  num_agents=20, num_iterations=10)
 models.compare_models()
