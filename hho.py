@@ -74,21 +74,21 @@ class hawk(NatureBasedAlgorithm):
 
 
 # === RUN SECTION ===
+if __name__ == "__main__":
+    # Define parameters
+    days = [1, 100, 6]     # [min_value, max_value, number_of_values]
+    weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
+    alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
+    step_size = 86400     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
 
-# Define parameters
-days = [1, 100, 6]     # [min_value, max_value, number_of_values]
-weights = [0.1, 1, 6]  # [min_value, max_value, number_of_values]
-alphas = [0.1, 1, 2]   # [min_value, max_value, number_of_values]
-step_size = 86400     # step_size in seconds (for x minutes use 60 * x, for x hours use 60 * 60 * x, etc.)
+    models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
 
-models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
+    alg: NatureBasedAlgorithm = hawk(models.score, days, weights, alphas, step_size,
+                                    models.train_start, models.train_end, models.train_data)
 
-alg: NatureBasedAlgorithm = hawk(models.score, days, weights, alphas, step_size,
-                                 models.train_start, models.train_end, models.train_data)
+    models.train_model(alg,  num_agents=20, num_iterations=10)
+    models.compare_models()
 
-models.train_model(alg,  num_agents=20, num_iterations=10)
-models.compare_models()
-
-#10 whales, 10 iterations = -$3.768671154374033 profit over baseline
-#20 whales, 10 iterations = -$83.41078505604878 profit over baseline
-#10 whales, 20 iterations = -4.478325905950442 profit over baseline
+    #10 whales, 10 iterations = -$3.768671154374033 profit over baseline
+    #20 whales, 10 iterations = -$83.41078505604878 profit over baseline
+    #10 whales, 20 iterations = -4.478325905950442 profit over baseline
