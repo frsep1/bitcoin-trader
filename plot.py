@@ -2,15 +2,18 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime
 import data_reader as dr
+from equations import original, MACD
+import os
 
 class Plotter:
-    def __init__(self, data, start, end, models, freq_function):
+    def __init__(self, data, models, num_agents):
         self.data = data
-        self.start = start
-        self.end = end
         self.models = models
-        self.freq_function = freq_function
+        self.num_agents = num_agents
         self.plot_data = {}
+        self.plot_dir = "./figures"
+        if not os.path.exists(self.plot_dir):
+            os.makedirs(self.plot_dir)
 
     def get_plotting_data(self):
         timestamps = self.data.df.index  # start after buffer
@@ -18,30 +21,38 @@ class Plotter:
         self.prices = [self.data.current_price(t) for t in timestamps]
         
         for model in self.models:
-            highs = []
+            self.iterations = len(self.models[model].scores_over_time)
             balance = dr.Balance()
             balance_line = []
-            lows = []
             buy_signals = []
-            sell_signals = []
-            days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model][6:12]]
-            current_signal = -1
-            for t in timestamps:
+            sell_signals = []            
+            if len(self.models[model].best_pos) == 14:
+                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model].best_pos[6:12]]
+                highs, lows = original({'weights':self.models[model].best_pos[:6], "days":days, "alphas":self.models[model].best_pos[12:14]}, self.data)
+                self.equation = "Original"
+            else:
+                days = [min(30, max(1, abs(int(round(d))))) for d in self.models[model].best_pos[:3]]
+                highs, lows = MACD({'days':days, "alphas":self.models[model].best_pos[3:]}, self.data)
+                self.equation = "MACD"
 
-                high, low = self.freq_function({'weights':self.models[model][:6], "days":days, "alphas":self.models[model][12:14]}, t, self.data)
-                highs.append(high)
-                lows.append(low)
+            last_signal = "sell"
+            for i, t in enumerate(timestamps):
 
-                if high < low:
-                    if current_signal == -1:
-                        balance.buy(self.data.current_price(t))
-                        buy_signals.append((t, self.data.current_price(t)))
-                        current_signal = 1
-                elif high > low:
-                    if current_signal == 1:
-                        balance.sell(self.data.current_price(t))
-                        sell_signals.append((t, self.data.current_price(t)))
-                        current_signal = -1
+                if highs[i] > lows[i]:
+                    if last_signal == "sell":
+                        # High freq has crossed over low freq indicating upward trend
+                        # Want to buy bitcoin
+                        balance.buy(self.prices[i])
+                        buy_signals.append((self.times[i], self.prices[i]))
+                        last_signal = "buy"
+
+                elif highs[i] < lows[i]:
+                    if last_signal == "buy":
+                        # High freq has cross over low frew indicating downward trend
+                        # Want to sell bitcoin
+                        balance.sell(self.prices[i])
+                        sell_signals.append((self.times[i], self.prices[i]))
+                        last_signal = "sell"
 
                 if balance.get_balance() == 0:
                     balance_line.append((balance.btc * self.data.current_price(t))*0.97)
@@ -59,7 +70,7 @@ class Plotter:
 
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
-        ax.set_title("Price, High Signal, and Low Signal Over Time")
+        ax.set_title(f"{model}, {self.iterations} Iterations, {self.num_agents} Agents, {self.equation} Equation - Signals Plot")
 
         # Show only 10 x-axis ticks (or fewer if the dataset is small)
         step = max(1, len(self.times) // 10)
@@ -72,7 +83,7 @@ class Plotter:
         ax.legend()
         ax.grid(True)
         fig.tight_layout()
-        plt.show()
+        plt.savefig(os.path.join(self.plot_dir, f"{model}_{self.iterations}_{self.num_agents}_{self.equation}_Signals_Plot.png"))
 
     def plot_buy_sell(self, model):
         model_data = self.plot_data[model]
@@ -83,18 +94,15 @@ class Plotter:
         ax1.plot(self.times, model_data['highs'], label='High', color='orange')
         ax1.plot(self.times, model_data['lows'], label='Low', color='deepskyblue')
         ax1.set_xlabel("Date")
-        ax1.set_ylabel("Price", color='black')
+        ax1.set_ylabel("Price (USD)", color='black')
         ax1.tick_params(axis='y', labelcolor='black')
-        ax1.set_title("Buy/Sell Signal Plot")
-
-        # Markers for buy/sell
-        for i, t, p in enumerate(zip(self.times, self.prices)):
-            ax1.scatter(t, p, marker='^', color='green', label='buy' if t == self.plot_data[model]['buy_signals'][i] else "")
-        for i, t, p in enumerate(zip(self.times, self.prices)):
-            ax1.scatter(t, p, marker='v', color='red', label='sell' if t == self.plot_data[model]['sell_signals'][i] else "")
+        ax1.set_title(f"{model}, {self.iterations} Iterations, {self.num_agents} Agents, {self.equation} Equation - Buy/Sell Signal Plot")
 
         # Secondary y-axis for difference signal
         ax2 = ax1.twinx()
+        # Markers for buy/sell
+        ax1.scatter([t for t, p in self.plot_data[model]['buy_signals']], [p for t, p in self.plot_data[model]['buy_signals']], marker='^', color='green', label='buy')
+        ax1.scatter([t for t, p in self.plot_data[model]['sell_signals']], [p for t, p in self.plot_data[model]['sell_signals']], marker='v', color='red', label='sell')
         diff = [h - l for h, l in zip(model_data['highs'], model_data['lows'])]
         ax2.plot(self.times, diff, label='High-Low', color='gray', linestyle='dotted')
         ax2.set_ylabel("Signal Difference", color='gray')
@@ -105,10 +113,17 @@ class Plotter:
         lines_2, labels_2 = ax2.get_legend_handles_labels()
         ax1.legend(lines_1 + lines_2, labels_1 + labels_2)
 
+        step = max(1, len(self.times) // 10)
+        ax1.set_xticks(self.times[::step])
+        ax1.set_xticklabels(
+            [dt.strftime("%d-%m-%y") for dt in self.times[::step]],
+            rotation=45
+        )
+
         fig.tight_layout()
         plt.xticks(rotation=45)
         plt.grid(True)
-        plt.show()
+        plt.savefig(os.path.join(self.plot_dir, f"{model}_{self.iterations}_{self.num_agents}_{self.equation}_BuySell_Signal_Plot.png"))
 
     def plot_profit(self):
         baseline = []
@@ -118,10 +133,10 @@ class Plotter:
         fig, ax = plt.subplots(figsize=(14, 6))
         ax.plot(self.times, baseline, label=f'Baseline {round(baseline[-1],2)}', color='black', linewidth=1.5)
         for model in self.models:
-            ax.plot(self.times, self.plot_data[model]['balance_line'], label=f'{model} {round(self.plot_data[model]['balance_line'][-1],2)}', linewidth=1.5)
+            ax.plot(self.times, self.plot_data[model]['balance_line'], label=f"{model} {round(self.plot_data[model]['balance_line'][-1],2)}", linewidth=1.5)
         ax.set_xlabel("Date")
         ax.set_ylabel("Balance (USD)")
-        ax.set_title("Balances Over Time")
+        ax.set_title(f"{model}, {self.iterations} Iterations, {self.num_agents} Agents, {self.equation} Equation - Algorithms Balances Over Time")
 
         # Show only 10 x-axis ticks
         step = max(1, len(self.times) // 10)
@@ -134,4 +149,12 @@ class Plotter:
         ax.legend()
         ax.grid(True)
         fig.tight_layout()
-        plt.show()
+        plt.savefig(os.path.join(self.plot_dir, f"{self.iterations}_{self.num_agents}_{self.equation}_balance_over_time.png"))
+    
+    def plot_scores_ot(self):
+        for model in self.models:
+            plt.plot(self.models[model].scores_over_time, label=model)
+        plt.xlabel("Iteration")
+        plt.ylabel("Score (USD)")
+        plt.legend()
+        plt.savefig(os.path.join(self.plot_dir, f"{self.iterations}_{self.num_agents}_{self.equation}_convergence_over_time.png"))

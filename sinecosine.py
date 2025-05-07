@@ -4,23 +4,17 @@ import pandas as pd
 import data_reader as dr
 from NatureBasedAlgorithm import NatureBasedAlgorithm
 
-class point(NatureBasedAlgorithm):
+class SCA(NatureBasedAlgorithm):
     def __init__(self, scoring, days, weights, alphas, intervals, start, end, data):
-        super().__init__(name="SineCosine", description="Sine Cosine Optimization",
+        super().__init__(name="SCA", description="Sine Cosine Optimization",
                          scoring=scoring, days=days, weights=weights, alphas=alphas, intervals=intervals,
                          start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
-        # super().change_pos(new_pos)?
-        new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)  # weights
-        new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)  # days
-        new_pos[12:14] = np.clip(new_pos[12:14], 0.0, 1.0)  # alphas
-        # === ================= ===
-        self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        super().change_pos(new_pos)
     
     def optimise(self, num_agents, iterations, constant=1):
-        points = [point(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
+        points = [SCA(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for i in range(num_agents)]
         best_pos = np.zeros(14)
         best_score = 0
         a = constant
@@ -44,6 +38,7 @@ class point(NatureBasedAlgorithm):
                 if points[j].score > best_score:
                     best_score = points[j].score
                     best_pos = points[j].pos
+            self.scores_over_time.append(best_score)
         return best_pos
 
 
@@ -57,7 +52,7 @@ if __name__ == "__main__":
 
     models = dr.Train("01/01/2019", "30/07/2019", "01/08/2019", "30/12/2019", step_size)
 
-    alg: NatureBasedAlgorithm = point(models.score, days, weights, alphas, step_size,
+    alg: NatureBasedAlgorithm = SCA(models.score, days, weights, alphas, step_size,
                                     models.train_start, models.train_end, models.train_data)
 
     models.train_model(alg,  num_agents=10, num_iterations=10)

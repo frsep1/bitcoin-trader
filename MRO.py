@@ -15,22 +15,14 @@ class MRFO(NatureBasedAlgorithm):
                          start=start, end=end, data=data)
     
     def change_pos(self, new_pos):
-        new_pos[0:6] = np.clip(new_pos[0:6], 0.1, 1.0)  # weights
-        new_pos[6:12] = np.clip(new_pos[6:12], 1, 100)  # days
-        new_pos[12:14] = np.clip(new_pos[12:14], 0.0, 1.0)  # alphas
-        # === ================= ===
-        self.pos = new_pos
-        self.score = self.scoring(self.pos[0:6], self.pos[6:12], self.pos[12:14], self.start, self.end, self.data)
+        super().change_pos(new_pos)
 
     def optimise(self, num_agents, iterations, constant=1):
         #S is the somersault factor that decides the somersault range of manta rays and 𝑆 = 2, 𝑟2 and 𝑟3 are two random numbers in [0, 1]    
         somersault = 2
         
         # make sure it is weights, days, alpha pattern. Tried to change a few of these parameters but didn't do much
-        lower_bound = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1,1, 1, 1, 1, 1, 1, 0.1, 0.1])
-        upper_bound = np.array([1, 1, 1, 1, 1, 1, 100, 100, 100, 100, 100, 100, 1, 1])
-        
-        points = [MRFO(self.scoring, self.days, self.weights,self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]
+        points = [MRFO(self.scoring, self.days, self.weights, self.alphas, self.intervals, self.start, self.end, self.data) for _ in range(num_agents)]
         
         best_fitness = float("-inf")
 
@@ -77,9 +69,6 @@ class MRFO(NatureBasedAlgorithm):
                 rand4 = np.random.rand()
                 somersault_move = somersault * (rand3 * current_best - rand4 * current)
                 new_position += somersault_move
-                
-                # this avoids it going out of the boundaries
-                new_position = np.clip(new_position, lower_bound, upper_bound)
 
                 points[i].change_pos(new_position)
 
@@ -87,7 +76,7 @@ class MRFO(NatureBasedAlgorithm):
                 if p.score > best_fitness:
                     best_fitness = p.score
                     best_solution = p.pos.copy()
-
+            self.scores_over_time.append(best_fitness)
 
         return best_solution
 
