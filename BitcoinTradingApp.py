@@ -5,7 +5,7 @@ import data_reader as dr
 from NatureBasedAlgorithm import NatureBasedAlgorithm
 from hho import hawk
 from MRO import MRFO
-from sinecosine import point
+from sinecosine import SCA
 from woa import whale
 
 class BitcoinTradingApp:
@@ -14,7 +14,7 @@ class BitcoinTradingApp:
 
     def create_algorithm(self, algorithm_name: str, scoring, days, weights, alphas, intervals, start, end, data) -> NatureBasedAlgorithm:
         if algorithm_name == "SineCosine":
-            return point(scoring, days, weights, alphas, intervals, start, end, data)
+            return SCA(scoring, days, weights, alphas, intervals, start, end, data)
         elif algorithm_name == "MRFO":
             return MRFO(scoring, days, weights, alphas, intervals, start, end, data)
         elif algorithm_name == "HHO":
