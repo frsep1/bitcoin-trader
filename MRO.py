@@ -81,7 +81,6 @@ class MRFO(NatureBasedAlgorithm):
         return best_solution
 
 # === RUN SECTION ===
-
 if __name__ == "__main__":
     # Define parameters
     days = [1, 100, 6]     # [min_value, max_value, number_of_values]
