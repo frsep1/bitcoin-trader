@@ -1,7 +1,7 @@
 # Bitcoin Trader
 
 # Authors
-Harry Morrison, Rodney Paul, Maxwell Hu, Enyong Zhao, Sepehr Ahmid, Hazif Zeeshan Ahmad
+Harry Morrison, Rodney Paul, Maxwell Hu, Enyong Zhao, Sepehr Ahmid, Hafiz Zeeshan Ahmad
 
 # Description
 Four trading bots written in Python designed to trade bitcoin using historic data. 
