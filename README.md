@@ -16,7 +16,7 @@ pip3 install -r requirements.txt
 
 # Run Instructions
 
-Run implement.py
+Run implement.py with desired parameters and equation.
 
 ### Windows
 python -m implement
